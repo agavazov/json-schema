@@ -1,0 +1,17 @@
+[
+    {
+        "description": "object schema - required",
+        "schema": {"type": "object", "required": ["x", "y", "z"]},
+        "valid": true
+    },
+    {
+        "description": "object schema - required wrong type",
+        "schema": {"type": "object", "required": "something"},
+        "valid": false
+    },
+    {
+        "description": "object schema - required wrong items type",
+        "schema": {"type": "object", "required": [1, "y", "z"]},
+        "valid": false
+    }
+]

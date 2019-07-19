@@ -1,0 +1,37 @@
+[
+    {
+        "description": "object schema - additionalProperties: true",
+        "schema": {"type": "object", "additionalProperties": true},
+        "valid": true
+    },
+    {
+        "description": "object schema - additionalProperties: false",
+        "schema": {"type": "object", "additionalProperties": false},
+        "valid": true
+    },
+    {
+        "description": "object schema - additionalProperties: schema-object",
+        "schema": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number"
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "object schema - additionalProperties: wrong value",
+        "schema": {"type": "object", "additionalProperties": "asdf"},
+        "valid": false
+    },
+    {
+        "description": "object schema - additionalProperties: wrong schema-object",
+        "schema": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "#$%^&*"
+            }
+        },
+        "valid": false
+    }
+]

@@ -1,0 +1,67 @@
+[
+    {
+        "description": "numeric schema - valid minimum",
+        "schema": {"type": "number", "minimum": 1},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - wrong minimum",
+        "schema": {"type": "number", "minimum": "x"},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - valid exclusiveMinimum",
+        "schema": {"type": "number", "exclusiveMinimum": 1},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - wrong exclusiveMinimum",
+        "schema": {"type": "number", "exclusiveMinimum": "x"},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - valid maximum",
+        "schema": {"type": "number", "maximum": 1},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - wrong maximum",
+        "schema": {"type": "number", "maximum": "x"},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - valid exclusiveMaximum",
+        "schema": {"type": "number", "exclusiveMaximum": 1},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - wrong exclusiveMaximum",
+        "schema": {"type": "number", "exclusiveMaximum": "x"},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - exclusiveMinimum is lower than exclusiveMaximum",
+        "schema": {"type": "number", "exclusiveMinimum": 1, "exclusiveMaximum": 10},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - exclusiveMinimum is higher than exclusiveMaximum",
+        "schema": {"type": "number", "exclusiveMinimum": 10, "exclusiveMaximum": 1},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - exclusiveMinimum is equal ot exclusiveMaximum",
+        "schema": {"type": "number", "exclusiveMinimum": 10, "exclusiveMaximum": 10},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - minimum is higher than maximum",
+        "schema": {"type": "number", "minimum": 10, "maximum": 1},
+        "valid": false
+    },
+    {
+        "description": "numeric schema - minimum is equal ot maximum",
+        "schema": {"type": "number", "minimum": 10, "maximum": 10},
+        "valid": true
+    }
+]

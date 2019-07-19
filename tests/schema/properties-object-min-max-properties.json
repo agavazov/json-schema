@@ -1,0 +1,27 @@
+[
+    {
+        "description": "object schema - valid minProperties",
+        "schema": {"type": "object", "minProperties": 1},
+        "valid": true
+    },
+    {
+        "description": "object schema - minProperties with object",
+        "schema": {"type": "object", "minProperties": "1"},
+        "valid": false
+    },
+    {
+        "description": "object schema - wrong maxProperties with object",
+        "schema": {"type": "object", "maxProperties": "1"},
+        "valid": false
+    },
+    {
+        "description": "object schema - valid maxProperties with object",
+        "schema": {"type": "object", "maxProperties": 10},
+        "valid": true
+    },
+    {
+        "description": "object schema - minProperties is higher than maxProperties",
+        "schema": {"type": "object", "minProperties": 10, "maxProperties": 1},
+        "valid": false
+    }
+]

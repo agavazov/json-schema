@@ -1,0 +1,30 @@
+[
+    {
+        "description": "array schema - contains",
+        "schema": {
+            "type": "array",
+            "contains": {
+                "type": "number"
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "array schema - contains wrong format",
+        "schema": {
+            "type": "array",
+            "contains": ["text"]
+        },
+        "valid": false
+    },
+    {
+        "description": "array schema - contains wrong format",
+        "schema": {
+            "type": "array",
+            "contains": {
+                "type": "something"
+            }
+        },
+        "valid": false
+    }
+]

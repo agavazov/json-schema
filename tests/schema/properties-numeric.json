@@ -1,0 +1,12 @@
+[
+    {
+        "description": "numeric schema - valid multipleOf",
+        "schema": {"type": "number", "multipleOf": 1},
+        "valid": true
+    },
+    {
+        "description": "numeric schema - wrong multipleOf",
+        "schema": {"type": "number", "multipleOf": "x"},
+        "valid": false
+    }
+]

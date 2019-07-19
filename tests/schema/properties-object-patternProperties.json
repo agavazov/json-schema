@@ -1,0 +1,34 @@
+[
+    {
+        "description": "object schema - valid patternProperties",
+        "schema": {
+            "type": "object",
+            "patternProperties": {
+                "^S_": {"type": "string"},
+                "^I_": {"type": "integer"}
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "object schema - patternProperties with wrong keys",
+        "schema": {
+            "type": "object",
+            "patternProperties": {
+                "wrong //\\ regex": {"type": "string"},
+                "^I_": {"type": "integer"}
+            }
+        },
+        "valid": false
+    },
+    {
+        "description": "object schema - patternProperties with wrong schema",
+        "schema": {
+            "type": "object",
+            "patternProperties": {
+                "^S_": {"type": "something"}
+            }
+        },
+        "valid": false
+    }
+]

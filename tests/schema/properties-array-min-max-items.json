@@ -1,0 +1,27 @@
+[
+    {
+        "description": "array schema - valid minItems",
+        "schema": {"type": "array", "minItems": 1},
+        "valid": true
+    },
+    {
+        "description": "array schema - minItems with array",
+        "schema": {"type": "array", "minItems": "1"},
+        "valid": false
+    },
+    {
+        "description": "array schema - wrong maxItems with array",
+        "schema": {"type": "array", "maxItems": "1"},
+        "valid": false
+    },
+    {
+        "description": "array schema - valid maxItems with array",
+        "schema": {"type": "array", "maxItems": 10},
+        "valid": true
+    },
+    {
+        "description": "array schema - minItems is higher than maxItems",
+        "schema": {"type": "array", "minItems": 10, "maxItems": 1},
+        "valid": false
+    }
+]

@@ -1,0 +1,37 @@
+[
+    {
+        "description": "array schema - additionalItems: true",
+        "schema": {"type": "array", "additionalItems": true},
+        "valid": true
+    },
+    {
+        "description": "array schema - additionalItems: false",
+        "schema": {"type": "array", "additionalItems": false},
+        "valid": true
+    },
+    {
+        "description": "array schema - additionalItems: schema-array",
+        "schema": {
+            "type": "array",
+            "additionalItems": {
+                "type": "number"
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "array schema - additionalItems: wrong value",
+        "schema": {"type": "array", "additionalItems": "asdf"},
+        "valid": false
+    },
+    {
+        "description": "array schema - additionalItems: wrong schema-array",
+        "schema": {
+            "type": "array",
+            "additionalItems": {
+                "type": "#$%^&*"
+            }
+        },
+        "valid": false
+    }
+]

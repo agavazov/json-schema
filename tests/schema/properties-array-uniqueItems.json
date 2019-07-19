@@ -1,0 +1,18 @@
+[
+    {
+        "description": "array schema - uniqueItems",
+        "schema": {
+            "type": "array",
+            "uniqueItems": true
+        },
+        "valid": true
+    },
+    {
+        "description": "array schema - uniqueItems wrong value",
+        "schema": {
+            "type": "array",
+            "uniqueItems": "no"
+        },
+        "valid": false
+    }
+]

@@ -1,0 +1,65 @@
+[
+    {
+        "description": "array schema - items (single schema)",
+        "schema": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "array schema - items (item schema)",
+        "schema": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "string",
+                    "enum": ["Street", "Avenue", "Boulevard"]
+                },
+                {
+                    "type": "string",
+                    "enum": ["NW", "NE", "SW", "SE"]
+                }
+            ]
+        },
+        "valid": true
+    },
+    {
+        "description": "array schema - items (single schema) wrong structure",
+        "schema": {
+            "type": "array",
+            "items": {
+                "type": "something"
+            }
+        },
+        "valid": false
+    },
+    {
+        "description": "array schema - items (item schema) wrong structure",
+        "schema": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "something"
+                }
+            ]
+        },
+        "valid": false
+    },
+    {
+        "description": "array schema - items (item schema) wrong structure",
+        "schema": {
+            "type": "array",
+            "items": ["whatever"]
+        },
+        "valid": false
+    }
+]

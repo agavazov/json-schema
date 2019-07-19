@@ -1,0 +1,49 @@
+[
+    {
+        "description": "object schema - dependencies (basic)",
+        "schema": {
+            "type": "object",
+            "dependencies": {
+                "credit_card": ["billing_address"]
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "object schema - dependencies (schema)",
+        "schema": {
+            "type": "object",
+            "dependencies": {
+                "credit_card": {
+                    "properties": {
+                        "billing_address": { "type": "string" }
+                    },
+                    "required": ["billing_address"]
+                }
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "object schema - dependencies (basic) wrong structure",
+        "schema": {
+            "type": "object",
+            "dependencies": {
+                "credit_card": [1, 2]
+            }
+        },
+        "valid": false
+    },
+    {
+        "description": "object schema - dependencies (schema) wrong structure",
+        "schema": {
+            "type": "object",
+            "dependencies": {
+                "credit_card": {
+                    "type": "something"
+                }
+            }
+        },
+        "valid": false
+    }
+]

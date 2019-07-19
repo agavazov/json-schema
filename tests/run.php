@@ -104,6 +104,13 @@ class Tests
         }
     }
 
+    /**
+     * Test provided data
+     * @param $test
+     * @param object $schema
+     * @param string $file
+     * @param string $description
+     */
     protected function testData($test, object $schema, string $file, string $description): void
     {
         if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
@@ -146,6 +153,13 @@ class Tests
         $this->results($testResult === $test->valid, $description, $file, $exception);
     }
 
+    /**
+     * Test only the schema (without the data)
+     * @param bool $valid
+     * @param object $schema
+     * @param string $file
+     * @param string $description
+     */
     protected function testSchema(bool $valid, object $schema, string $file, string $description): void
     {
         if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
@@ -157,7 +171,8 @@ class Tests
         try {
             $data = null;
             if (property_exists($schema, 'type')) {
-                @settype($data, $schema->type);
+                $setType = $schema->type === 'number' ? 'integer' : $schema->type;
+                @settype($data, $setType);
             }
             $this->validator->validate($data, $schema);
             $testResult = true;
@@ -171,6 +186,13 @@ class Tests
         $this->results($testResult === $valid, $description, $file, $exception);
     }
 
+    /**
+     * Output the results
+     * @param bool $success
+     * @param string $description
+     * @param string|null $file
+     * @param Exception|null $exceptionMessage
+     */
     public function results(bool $success, string $description, string $file = null, ?\Exception $exceptionMessage = null): void
     {
         $log = '';
@@ -196,7 +218,7 @@ class Tests
 }
 
 $test = new Tests();
-$test->addCollection('./data');
+$test->addCollection('./data', false);
 $test->addCollection('./schema', true);
-//$test->addFilter('./collections/custom/types.json', 'basic number validation from integer');
+//$test->addFilter(null, 'dependencies');
 $test->run();
