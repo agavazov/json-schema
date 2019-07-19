@@ -1,0 +1,37 @@
+[
+    {
+        "description": "string schema - valid minLength",
+        "schema": {"type": "string", "minLength": 1},
+        "valid": true
+    },
+    {
+        "description": "string schema - minLength with string",
+        "schema": {"type": "string", "minLength": "1"},
+        "valid": false
+    },
+    {
+        "description": "string schema - maxLength with string",
+        "schema": {"type": "string", "maxLength": "1"},
+        "valid": false
+    },
+    {
+        "description": "string schema - minLength is higher than maxLength",
+        "schema": {"type": "string", "minLength": 10, "maxLength": 1},
+        "valid": false
+    },
+    {
+        "description": "string schema - pattern",
+        "schema": {"type": "string", "pattern": "wrong regex !@#$%^&*()_"},
+        "valid": false
+    },
+    {
+        "description": "string schema - contentMediaType",
+        "schema": {"type": "string", "contentMediaType": "wrong regex !@#$%^&*()_"},
+        "valid": false
+    },
+    {
+        "description": "string schema - contentEncoding",
+        "schema": {"type": "string", "contentEncoding": "wrong regex !@#$%^&*()_"},
+        "valid": false
+    }
+]

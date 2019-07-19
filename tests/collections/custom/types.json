@@ -1,0 +1,213 @@
+[
+    {
+        "description": "validate of string type",
+        "schema": {"type": "string"},
+        "tests": [
+            {
+                "description": "basic string validation",
+                "data": "hello world",
+                "valid": true
+            },
+            {
+                "description": "boolean is not a string",
+                "data": true,
+                "valid": false
+            },
+            {
+                "description": "integer is not a string",
+                "data": 1,
+                "valid": false
+            },
+            {
+                "description": "number is not a string",
+                "data": 1.2,
+                "valid": false
+            },
+            {
+                "description": "array is not a string",
+                "data": [1, 2],
+                "valid": false
+            },
+            {
+                "description": "object is not a string",
+                "data": {"hello": "world"},
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "validate of boolean type",
+        "schema": {"type": "boolean"},
+        "tests": [
+            {
+                "description": "basic boolean validation",
+                "data": true,
+                "valid": true
+            },
+            {
+                "description": "string is not a boolean",
+                "data": "true",
+                "valid": false
+            },
+            {
+                "description": "integer is not a boolean",
+                "data": 1,
+                "valid": false
+            },
+            {
+                "description": "number is not a boolean",
+                "data": 1.2,
+                "valid": false
+            },
+            {
+                "description": "array is not a boolean",
+                "data": [true, false],
+                "valid": false
+            },
+            {
+                "description": "object is not a boolean",
+                "data": {"true": "false"},
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "validate of integer type",
+        "schema": {"type": "integer"},
+        "tests": [
+            {
+                "description": "basic integer validation",
+                "data": 1,
+                "valid": true
+            },
+            {
+                "description": "basic integer validation with zero decimal",
+                "data": 1.0,
+                "valid": true
+            },
+            {
+                "description": "string is not a integer",
+                "data": "1",
+                "valid": false
+            },
+            {
+                "description": "boolean is not a integer",
+                "data": true,
+                "valid": false
+            },
+            {
+                "description": "number is not a integer",
+                "data": 1.2,
+                "valid": false
+            },
+            {
+                "description": "array is not a integer",
+                "data": [true, false],
+                "valid": false
+            },
+            {
+                "description": "object is not a integer",
+                "data": {"true": "false"},
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "validate of number type",
+        "schema": {"type": "number"},
+        "tests": [
+            {
+                "description": "basic number validation from integer",
+                "data": 1,
+                "valid": true
+            },
+            {
+                "description": "basic number validation",
+                "data": 1.2,
+                "valid": true
+            },
+            {
+                "description": "string is not a number",
+                "data": "1",
+                "valid": false
+            },
+            {
+                "description": "boolean is not a number",
+                "data": true,
+                "valid": false
+            },
+            {
+                "description": "array is not a number",
+                "data": [true, false],
+                "valid": false
+            },
+            {
+                "description": "object is not a number",
+                "data": {"true": "false"},
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "validate of array type",
+        "schema": {"type": "array"},
+        "tests": [
+            {
+                "description": "basic array validation",
+                "data": [1, 2, 3],
+                "valid": true
+            },
+            {
+                "description": "number is not a array",
+                "data": 1.2,
+                "valid": false
+            },
+            {
+                "description": "string is not a array",
+                "data": "[]",
+                "valid": false
+            },
+            {
+                "description": "boolean is not a array",
+                "data": true,
+                "valid": false
+            },
+            {
+                "description": "object is not a array",
+                "data": {"0": "1"},
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "validate of object type",
+        "schema": {"type": "object"},
+        "tests": [
+            {
+                "description": "basic array validation",
+                "data": {"hello": "world"},
+                "valid": true
+            },
+            {
+                "description": "number is not a object",
+                "data": 1.2,
+                "valid": false
+            },
+            {
+                "description": "string is not a object",
+                "data": "[]",
+                "valid": false
+            },
+            {
+                "description": "boolean is not a object",
+                "data": true,
+                "valid": false
+            },
+            {
+                "description": "array is not a object",
+                "data": [1, 2, 3],
+                "valid": false
+            }
+        ]
+    }
+]

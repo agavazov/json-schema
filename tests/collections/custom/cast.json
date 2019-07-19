@@ -1,0 +1,277 @@
+[
+    {
+        "description": "validate of string cast",
+        "schema": {"type": "string"},
+        "tests": [
+            {
+                "description": "cast integer to string validation",
+                "data": 1,
+                "valid": true,
+                "expect": "1",
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast number to string validation",
+                "data": 1.1,
+                "valid": true,
+                "expect": "1.1",
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "array can`t be casted to a string",
+                "data": [],
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "object can`t be casted to a string",
+                "data": {},
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "boolean can`t be casted to a string",
+                "data": true,
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "validate of boolean cast",
+        "schema": {"type": "boolean"},
+        "tests": [
+            {
+                "description": "cast integer '1' to boolean validation",
+                "data": 1,
+                "valid": true,
+                "expect": true,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast integer '0' to boolean validation",
+                "data": 0,
+                "valid": true,
+                "expect": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string '1' to boolean validation",
+                "data": "1",
+                "valid": true,
+                "expect": true,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string '0' to boolean validation",
+                "data": "0",
+                "valid": true,
+                "expect": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string 'tRue' to boolean validation",
+                "data": "1",
+                "valid": true,
+                "expect": true,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string 'faLSE' to boolean validation",
+                "data": "0",
+                "valid": true,
+                "expect": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "array can`t be casted to a boolean",
+                "data": [],
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+              "description": "string 'ttrruue' can`t be casted to a boolean",
+                "data": "ttrruue",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "validate of integer cast",
+        "schema": {"type": "integer"},
+        "tests": [
+            {
+                "description": "cast string to integer validation",
+                "data": "1",
+                "valid": true,
+                "expect": 1,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "array can`t be casted to a integer",
+                "data": [],
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+              "description": "string '1.1' can`t be casted to a integer",
+                "data": "1.1",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+              "description": "number 1.2 can`t be casted to a integer",
+                "data": 1.2,
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "validate of number cast",
+        "schema": {"type": "number"},
+        "tests": [
+            {
+                "description": "cast string '1' to number validation",
+                "data": "1",
+                "valid": true,
+                "expect": 1.0,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string '1.2' to number validation",
+                "data": "1.2",
+                "valid": true,
+                "expect": 1.2,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "array can`t be casted to a number",
+                "data": [],
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "validate of object cast",
+        "schema": {"type": "object"},
+        "tests": [
+            {
+                "description": "cast json object to object validation",
+                "data": "{}",
+                "valid": true,
+                "expect": {},
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string '1' to object validation",
+                "data": "{\"key\": \"value\"}",
+                "valid": true,
+                "expect": {"key": "value"},
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "array can`t be casted to a object",
+                "data": "[]",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "integer can`t be casted to a object",
+                "data": "1",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "validate of array cast",
+        "schema": {"type": "array"},
+        "tests": [
+            {
+                "description": "cast json array to array validation",
+                "data": "[]",
+                "valid": true,
+                "expect": [],
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "cast string '1' to array validation",
+                "data": "[1, 2, 3, {}]",
+                "valid": true,
+                "expect": [1, 2, 3, {}],
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "object can`t be casted to a array",
+                "data": "{}",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            },
+            {
+                "description": "integer can`t be casted to a array",
+                "data": "1",
+                "valid": false,
+                "modes": [
+                    "CAST"
+                ]
+            }
+        ]
+    }
+]

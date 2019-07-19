@@ -1,0 +1,29 @@
+[
+    {
+        "description": "check for non defined type",
+        "schema": {"type": "asdfg"},
+        "valid": false
+    },
+    {
+        "description": "check for non defined format",
+        "schema": {"format": "asdfg"},
+        "tests": [
+            {
+                "description": "check for non defined format",
+                "data": "hello world",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "check for non defined type & format",
+        "schema": {"type": "asdfg", "format": "asdfg"},
+        "tests": [
+            {
+                "description": "check for non defined type & format",
+                "data": "hello world",
+                "valid": false
+            }
+        ]
+    }
+]
