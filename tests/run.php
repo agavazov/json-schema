@@ -5,12 +5,6 @@ require __DIR__ . './../vendor/autoload.php';
 class Tests
 {
     /**
-     * Directory where all tests are stored
-     * @var string
-     */
-    protected $testsDirectory;
-
-    /**
      * Validator instance
      * @var \FrontLayer\JsonSchema\Validator
      */
@@ -23,23 +17,33 @@ class Tests
     protected $testCollections = [];
 
     /**
-     * Tests constructor.
-     * @param string $testsDirectory
+     * Filter by file
+     * @var null|string
      */
-    public function __construct(string $testsDirectory)
-    {
-        $this->testsDirectory = $testsDirectory;
-        $this->validator = new \FrontLayer\JsonSchema\Validator();
+    protected $specificFile = null;
 
-        $this->collectFiles();
+    /**
+     * Filter by description
+     * @var null|string
+     */
+    protected $descriptionSearch = null;
+
+    /**
+     * Tests constructor.
+     */
+    public function __construct()
+    {
+        $this->validator = new \FrontLayer\JsonSchema\Validator();
     }
 
     /**
      * Collect all tests
+     * @param string $directory
+     * @param bool $schemaOnly
      */
-    public function collectFiles(): void
+    public function addCollection(string $directory, bool $schemaOnly = false): void
     {
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->testsDirectory));
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
 
         foreach ($rii as $file) {
             /* @var $file \SplFileInfo */
@@ -58,90 +62,113 @@ class Tests
 
             $this->testCollections[] = (object)[
                 'file' => $file->getPathname(),
+                'schemaOnly' => $schemaOnly,
                 'content' => json_decode(file_get_contents($file->getPathname()))
             ];
         }
     }
 
     /**
-     * Run all tests
+     * Specify which tests to run
      * @param string|null $specificFile
      * @param string|null $descriptionSearch
      */
-    public function runTests(string $specificFile = null, string $descriptionSearch = null): void
+    public function addFilter(string $specificFile = null, string $descriptionSearch = null): void
+    {
+        $this->specificFile = $specificFile;
+        $this->descriptionSearch = $descriptionSearch;
+    }
+
+    /**
+     * Run all tests
+     */
+    public function run(): void
     {
         // Run tests
         foreach ($this->testCollections as $collection) {
-            if ($specificFile && $specificFile !== $collection->file) {
+            if ($this->specificFile && $this->specificFile !== $collection->file) {
                 continue;
             }
 
             foreach ($collection->content as $content) {
-                // Schema only
-                if (!property_exists($content, 'tests')) {
-                    $data = null;
-
-                    if (property_exists($content->schema, 'type')) {
-                        @settype($data, $content->schema->type);
-                    }
-
-                    $content->tests = [
-                        (object)[
-                            'description' => $content->description,
-                            'valid' => $content->valid,
-                            'data' => $data
-                        ]
-                    ];
-                }
-
                 // Validate
-                foreach ($content->tests as $test) {
-                    $description = $content->description . '::' . $test->description;
-
-                    if ($descriptionSearch && strstr($description, $descriptionSearch) === false) {
-                        continue;
+                if (!empty($collection->schemaOnly)) {
+                    $this->testSchema($content->valid, $content->schema, $collection->file, $content->description);
+                } else {
+                    // Data test
+                    foreach ($content->tests as $test) {
+                        $this->testData($test, $content->schema, $collection->file, $content->description . '::' . $test->description);
                     }
-
-                    $mode = 0;
-
-                    if (!empty($test->modes) && is_array($test->modes)) {
-                        if (in_array('CAST', $test->modes)) {
-                            $mode ^= \FrontLayer\JsonSchema\Validator::MODE_CAST;
-                        }
-                    }
-
-                    $newData = null;
-                    $exception = null;
-
-                    try {
-                        $newData = $this->validator->validate($test->data, $content->schema, $mode);
-                        $testResult = true;
-                        /*
-                        } catch (\FrontLayer\JsonSchema\ValidationException $e) {
-                            $testResult = false;
-                            $exception = $e;
-                        */
-                    } catch (\Exception $e) {
-                        $testResult = false;
-                        $exception = $e;
-                    }
-
-                    if (property_exists($test, 'expect')) {
-                        if (in_array(gettype($test->expect), ['object', 'array'])) {
-                            if ($newData != $test->expect) {
-                                $testResult = false;
-                            }
-                        } else {
-                            if ($newData !== $test->expect) {
-                                $testResult = false;
-                            }
-                        }
-                    }
-
-                    $this->results($testResult === $test->valid, $description, $collection->file, $exception);
                 }
             }
         }
+    }
+
+    protected function testData($test, object $schema, string $file, string $description): void
+    {
+        if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
+            return;
+        }
+
+        $mode = 0;
+
+        if (!empty($test->modes) && is_array($test->modes)) {
+            if (in_array('CAST', $test->modes)) {
+                $mode ^= \FrontLayer\JsonSchema\Validator::MODE_CAST;
+            }
+        }
+
+        $newData = null;
+        $exception = null;
+
+        try {
+            $newData = $this->validator->validate($test->data, $schema, $mode);
+            $testResult = true;
+        } catch (\FrontLayer\JsonSchema\ValidationException $exception) {
+            $testResult = false;
+        } catch (\Exception $exception) {
+            $this->results(false, $description . ' (NON DATA EXCEPTION)', $file, $exception);
+            return;
+        }
+
+        if (property_exists($test, 'expect')) {
+            if (in_array(gettype($test->expect), ['object', 'array'])) {
+                if ($newData != $test->expect) {
+                    $testResult = false;
+                }
+            } else {
+                if ($newData !== $test->expect) {
+                    $testResult = false;
+                }
+            }
+        }
+
+        $this->results($testResult === $test->valid, $description, $file, $exception);
+    }
+
+    protected function testSchema(bool $valid, object $schema, string $file, string $description): void
+    {
+        if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
+            return;
+        }
+
+        $exception = null;
+
+        try {
+            $data = null;
+            if (property_exists($schema, 'type')) {
+                @settype($data, $schema->type);
+            }
+            $this->validator->validate($data, $schema);
+            $testResult = true;
+        } catch (\FrontLayer\JsonSchema\SchemaException $exception) {
+            $testResult = false;
+        } catch (\Exception $exception) {
+            $this->results(false, $description . ' (NON SCHEMA EXCEPTION)', $file, $exception);
+            return;
+        }
+
+        $this->results($testResult === $valid, $description, $file, $exception);
     }
 
     public function results(bool $success, string $description, string $file = null, ?\Exception $exceptionMessage = null): void
@@ -150,7 +177,7 @@ class Tests
         if ($success) {
             $log .= 'SUCCESS: ';
         } else {
-            $log .= 'FALSE: ';
+            $log .= 'FAIL: ';
         }
 
         $log .= $description;
@@ -163,13 +190,13 @@ class Tests
         if (!$success) {
             print '<pre style="color: red;">' . $log . '</pre>';
         } else {
-            print '<pre style="color: green;">' . $log . '</pre>';
+            print '<pre style="color: #a3d39b;">' . $log . '</pre>';
         }
     }
 }
 
-$dir = './collections/custom/format';
-$dir = './collections'; // @todo
-$test = new Tests($dir);
-//$test->runTests('./collections/custom/types.json', 'basic number validation from integer');
-$test->runTests();
+$test = new Tests();
+$test->addCollection('./data');
+$test->addCollection('./schema', true);
+//$test->addFilter('./collections/custom/types.json', 'basic number validation from integer');
+$test->run();

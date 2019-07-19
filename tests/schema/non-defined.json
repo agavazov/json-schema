@@ -1,0 +1,22 @@
+[
+    {
+        "description": "check for defined type",
+        "schema": {"type": "string"},
+        "valid": true
+    },
+    {
+        "description": "check for non defined type",
+        "schema": {"type": "non-defined-type-asdf"},
+        "valid": false
+    },
+    {
+        "description": "check for non defined format",
+        "schema": {"format": "non-defined-format-asdf"},
+        "valid": false
+    },
+    {
+        "description": "check for non defined type & format",
+        "schema": {"type": "non-defined-type-asdf", "format": "non-defined-format-asdf"},
+        "valid": false
+    }
+]

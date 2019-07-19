@@ -1,0 +1,57 @@
+[
+    {
+        "description": "string schema - valid minLength",
+        "schema": {"type": "string", "minLength": 1},
+        "valid": true
+    },
+    {
+        "description": "string schema - minLength with string",
+        "schema": {"type": "string", "minLength": "1"},
+        "valid": false
+    },
+    {
+        "description": "string schema - wrong maxLength with string",
+        "schema": {"type": "string", "maxLength": "1"},
+        "valid": false
+    },
+    {
+        "description": "string schema - valid maxLength with string",
+        "schema": {"type": "string", "maxLength": 10},
+        "valid": true
+    },
+    {
+        "description": "string schema - minLength is higher than maxLength",
+        "schema": {"type": "string", "minLength": 10, "maxLength": 1},
+        "valid": false
+    },
+    {
+        "description": "string schema - valid pattern",
+        "schema": {"type": "string", "pattern": "\\n|\\r\\n"},
+        "valid": true
+    },
+    {
+        "description": "string schema - wrong pattern",
+        "schema": {"type": "string", "pattern": "wrong regex \\// !@#$%^&*()_"},
+        "valid": false
+    },
+    {
+        "description": "string schema - wrong contentMediaType",
+        "schema": {"type": "string", "contentMediaType": "sdfgf"},
+        "valid": false
+    },
+    {
+        "description": "string schema - valid contentMediaType",
+        "schema": {"type": "string", "contentMediaType": "image/jpeg"},
+        "valid": true
+    },
+    {
+        "description": "string schema - valid contentEncoding",
+        "schema": {"type": "string", "contentEncoding": "whatever"},
+        "valid": true
+    },
+    {
+        "description": "string schema - wrong contentEncoding",
+        "schema": {"type": "string", "contentEncoding": 123},
+        "valid": false
+    }
+]

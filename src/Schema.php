@@ -123,7 +123,7 @@ class Schema
             // Check for unknown types
             if (!in_array($type, ['string', 'number', 'integer', 'array', 'object', 'boolean'])) {
                 throw new SchemaException(sprintf(
-                    'Unknown type %s (%s)',
+                    'Unknown type "%s" (%s)',
                     $type,
                     $this->storage->_path . '/type'
                 ));
@@ -407,9 +407,9 @@ class Schema
             return;
         }
 
-        if (is_string($this->storage->pattern)) {
+        if (!is_string($this->storage->pattern)) {
             throw new SchemaException(sprintf(
-                'You have "pattern" which value is not a string but it is "%s" (%s)',
+                'You have "pattern" which value is not a "string" but it is "%s" (%s)',
                 gettype($this->storage->pattern),
                 $this->storage->_path . '/pattern'
             ));
@@ -424,7 +424,8 @@ class Schema
     }
 
     /**
-     * @todo
+     * Check contentMediaType property
+     * @throws SchemaException
      */
     protected function processContentMediaType(): void
     {
@@ -432,11 +433,25 @@ class Schema
             return;
         }
 
-        // @todo
+        if (!is_string($this->storage->contentMediaType)) {
+            throw new SchemaException(sprintf(
+                'You have "contentMediaType" which value is not a "string" but it is "%s" (%s)',
+                gettype($this->storage->contentMediaType),
+                $this->storage->_path . '/contentMediaType'
+            ));
+        }
+
+        if (strstr($this->storage->contentMediaType, '/') === false) {
+            throw new SchemaException(sprintf(
+                'You have "contentMediaType" which is not well formatted. Slash "/" is missing (%s)',
+                $this->storage->_path . '/contentMediaType'
+            ));
+        }
     }
 
     /**
-     * @todo
+     * Check contentEncoding property
+     * @throws SchemaException
      */
     protected function processContentEncoding(): void
     {
@@ -444,7 +459,13 @@ class Schema
             return;
         }
 
-        // @todo
+        if (!is_string($this->storage->contentEncoding)) {
+            throw new SchemaException(sprintf(
+                'You have "contentEncoding" which value is not a "string" but it is "%s" (%s)',
+                gettype($this->storage->contentEncoding),
+                $this->storage->_path . '/contentEncoding'
+            ));
+        }
     }
 
     /**
