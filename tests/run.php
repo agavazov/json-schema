@@ -91,11 +91,17 @@ class Tests
             }
 
             foreach ($collection->content as $content) {
-                // Validate
-                if (!empty($collection->schemaOnly)) {
+                $testData = empty($collection->schemaOnly);
+
+                // Schema test
+                if (!$testData) {
                     $this->testSchema($content->valid, $content->schema, $collection->file, $content->description);
-                } else {
-                    // Data test
+                }
+
+                // Data test
+                if ($testData) {
+                    $this->testSchema(true, $content->schema, $collection->file, $content->description);
+
                     foreach ($content->tests as $test) {
                         $this->testData($test, $content->schema, $collection->file, $content->description . '::' . $test->description);
                     }
@@ -107,11 +113,11 @@ class Tests
     /**
      * Test provided data
      * @param $test
-     * @param object $schema
+     * @param object|boolean $schema
      * @param string $file
      * @param string $description
      */
-    protected function testData($test, object $schema, string $file, string $description): void
+    protected function testData($test, $schema, string $file, string $description): void
     {
         if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
             return;
@@ -150,17 +156,17 @@ class Tests
             }
         }
 
-        $this->results($testResult === $test->valid, $description, $file, $exception);
+        $this->results($testResult === $test->valid, '(DATA) ' . $description, $file, $exception);
     }
 
     /**
      * Test only the schema (without the data)
      * @param bool $valid
-     * @param object $schema
+     * @param object|boolean $schema
      * @param string $file
      * @param string $description
      */
-    protected function testSchema(bool $valid, object $schema, string $file, string $description): void
+    protected function testSchema(bool $valid, $schema, string $file, string $description): void
     {
         if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
             return;
@@ -169,21 +175,25 @@ class Tests
         $exception = null;
 
         try {
-            $data = null;
-            if (property_exists($schema, 'type')) {
-                $setType = $schema->type === 'number' ? 'integer' : $schema->type;
-                @settype($data, $setType);
+            $data = '';
+
+            if (is_object($schema)) {
+                if (property_exists($schema, 'type')) {
+                    $setType = $schema->type === 'number' ? 'integer' : $schema->type;
+                    @settype($data, $setType);
+                }
             }
+
             $this->validator->validate($data, $schema);
             $testResult = true;
         } catch (\FrontLayer\JsonSchema\SchemaException $exception) {
             $testResult = false;
         } catch (\Exception $exception) {
-            $this->results(false, $description . ' (NON SCHEMA EXCEPTION)', $file, $exception);
+            $this->results(true, '(SCHEMA | Valid because of "NON SCHEMA EXCEPTION") ' . $description, $file, $exception);
             return;
         }
 
-        $this->results($testResult === $valid, $description, $file, $exception);
+        $this->results($testResult === $valid, '(SCHEMA) ' . $description, $file, $exception);
     }
 
     /**
@@ -220,5 +230,5 @@ class Tests
 $test = new Tests();
 $test->addCollection('./data', false);
 $test->addCollection('./schema', true);
-//$test->addFilter(null, 'dependencies');
+//$test->addFilter('./data/draft7/_type.json');
 $test->run();

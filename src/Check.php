@@ -429,6 +429,6 @@ class Check
             return $components->scheme . ':' . $uri;
         }
 
-        return $uri;
+        return $uri !== false ? $uri : '';
     }
 }

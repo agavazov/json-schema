@@ -40,25 +40,38 @@ class Validator
         ];
     }
 
-    public function validate($data, object $schemaObject, int $mode = 0)
+    public function validate($data, $schema, int $mode = 0)
     {
         // Make schema variable to be instance of Schema class
-        {
-            $formatsMap = (object)array_map(function (object $item) {
-                return $item->type;
-            }, (array)$this->formats);
+        $formatsMap = (object)array_map(function (object $item) {
+            return $item->type;
+        }, (array)$this->formats);
 
-            $schema = new Schema($schemaObject, $formatsMap);
-        }
+        $schema = new Schema($schema, $formatsMap);
 
+        // Validate
         $this->validateType($data, $schema, ($mode & self::MODE_CAST) === self::MODE_CAST);
         $this->validateFormat($data, $schema);
 
         return $data;
     }
 
-    public function validateType(&$data, Schema $schema, $cast = false): void
+    protected function validateType(&$data, Schema $schema, $cast = false): void
     {
+        // If the whole schema is boolean
+        if (is_bool($schema->storage())) {
+            // If schema is "false" then it will disallow everything
+            if ($schema->storage() === true) {
+                throw new ValidationException(sprintf(
+                    'Provided schema is with value "false" which means it will disallow everything (%s)',
+                    $schema->getPath()
+                ));
+            } else {
+                return; // When is "true" then it will allow everything
+            }
+        }
+
+        // When there is no type the validation will allow everything // @todo recheck is this valid rule
         if (!property_exists($schema->storage(), 'type')) {
             return;
         }
@@ -102,7 +115,7 @@ class Validator
                     'Provided data type "%s" does not validated with schema type "%s" (%s)',
                     $dataType,
                     $schema->getMainType(),
-                    $schema->storage()->_path
+                    $schema->getPath()
                 ));
             }
         } else {
@@ -110,12 +123,12 @@ class Validator
                 'There is provided schema with types "%s" which not match with the data type "%s" (%s)',
                 implode(';', $schema->storage()->type),
                 $dataType,
-                $schema->storage()->_path . '/type'
+                $schema->getPath() . '/type'
             ));
         }
     }
 
-    public function validateFormat(&$data, Schema $schema): void
+    protected function validateFormat(&$data, Schema $schema): void
     {
         if (!property_exists($schema->storage(), 'format')) {
             return;
@@ -128,7 +141,7 @@ class Validator
             throw new ValidationException(sprintf(
                 'Provided data is not validated with format "%s" (%s)',
                 $format,
-                $schema->storage()->_path . '/format'
+                $schema->getPath() . '/format'
             ));
         }
     }
