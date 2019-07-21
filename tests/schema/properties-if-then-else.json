@@ -1,0 +1,31 @@
+[
+    {
+        "description": "if/then/else schema",
+        "schema": {
+            "type": "string",
+            "if": {
+                "minLength": 10
+            },
+            "then": {
+                "maxLength": 20
+            },
+            "else": {
+                "maxLength": 30
+            }
+        },
+        "valid": true
+    },
+    {
+        "description": "if/then/else schema",
+        "schema": {
+            "type": "string",
+            "if": {
+                "minLength": "foo"
+            },
+            "then": {
+                "maxLength": "bar"
+            }
+        },
+        "valid": false
+    }
+]

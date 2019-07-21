@@ -38,7 +38,7 @@ class Schema
 
         // Check for valid property type
         if (is_bool($schema)) {
-            return; // @todo - make it work with boolean schema
+            return;
         }
 
         // Check each attribute
@@ -263,7 +263,8 @@ class Schema
     }
 
     /**
-     * @todo
+     * Check if property
+     * @throws SchemaException
      */
     protected function processIf(): void
     {
@@ -272,12 +273,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/if';
+        $this->storage->if = new Schema($this->storage->if, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check then property
+     * @throws SchemaException
      */
     protected function processThen(): void
     {
@@ -286,12 +289,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/then';
+        $this->storage->then = new Schema($this->storage->then, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check else property
+     * @throws SchemaException
      */
     protected function processElse(): void
     {
@@ -300,12 +305,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/else';
+        $this->storage->else = new Schema($this->storage->else, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check const property
+     * @throws SchemaException
      */
     protected function processConst(): void
     {
@@ -314,13 +321,19 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
-        // @todo - reassign schema to enum [:const]
+        // Register or overwrite "enum" with current value of "const"
+        $this->storage->enum = [$this->storage->const];
+
+        // Remove const because enum will take care
+        unset($this->storage->const);
+
+        // Validate enum value
+        $this->processEnum();
     }
 
     /**
-     * @todo
+     * Check enum property
+     * @throws SchemaException
      */
     protected function processEnum(): void
     {
@@ -330,11 +343,18 @@ class Schema
         }
 
         // Check for valid property type
-        // @todo
+        if (!is_array($this->storage->enum)) {
+            throw new SchemaException(sprintf(
+                'You have "enum" which value is not an "array" but it is "%s" (%s)',
+                gettype($this->storage->enum),
+                $this->getPath() . '/enum'
+            ));
+        }
     }
 
     /**
-     * @todo
+     * Check allOf property
+     * @throws SchemaException
      */
     protected function processAllOf(): void
     {
@@ -343,12 +363,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/allOf';
+        $this->storage->allOf = new Schema($this->storage->allOf, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check anyOf property
+     * @throws SchemaException
      */
     protected function processAnyOf(): void
     {
@@ -357,12 +379,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/anyOf';
+        $this->storage->anyOf = new Schema($this->storage->anyOf, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check oneOf property
+     * @throws SchemaException
      */
     protected function processOneOf(): void
     {
@@ -371,12 +395,14 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/oneOf';
+        $this->storage->oneOf = new Schema($this->storage->oneOf, $this->formatsMap, $newPath);
     }
 
     /**
-     * @todo
+     * Check not property
+     * @throws SchemaException
      */
     protected function processNot(): void
     {
@@ -385,8 +411,9 @@ class Schema
             return;
         }
 
-        // Check for valid property type
-        // @todo
+        // Create sub-schema object
+        $newPath = $this->getPath() . '/not';
+        $this->storage->not = new Schema($this->storage->not, $this->formatsMap, $newPath);
     }
 
     /**
