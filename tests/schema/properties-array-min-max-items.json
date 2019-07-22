@@ -23,5 +23,15 @@
         "description": "array schema - minItems is higher than maxItems",
         "schema": {"type": "array", "minItems": 10, "maxItems": 1},
         "valid": false
+    },
+    {
+        "description": "array schema - minItems is negative",
+        "schema": {"type": "array", "minItems": -10},
+        "valid": false
+    },
+    {
+        "description": "array schema - maxItems is negative",
+        "schema": {"type": "array", "maxItems": -10},
+        "valid": false
     }
 ]

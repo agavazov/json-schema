@@ -52,6 +52,59 @@ class Validator
         // Validate
         $this->validateType($data, $schema, ($mode & self::MODE_CAST) === self::MODE_CAST);
         $this->validateFormat($data, $schema);
+        $this->validateIf($data, $schema);
+        $this->validateThen($data, $schema);
+        $this->validateElse($data, $schema);
+        $this->validateConst($data, $schema);
+        $this->validateEnum($data, $schema);
+        $this->validateAllOf($data, $schema);
+        $this->validateAnyOf($data, $schema);
+        $this->validateOneOf($data, $schema);
+        $this->validateNot($data, $schema);
+
+        switch ($schema->getMainType()) {
+            case 'string':
+                {
+                    $this->validateMinLength($data, $schema);
+                    $this->validateMaxLength($data, $schema);
+                    $this->validatePattern($data, $schema);
+                    $this->validateContentMediaType($data, $schema);
+                    $this->validateContentEncoding($data, $schema);
+                    break;
+                }
+            case 'number':
+            case 'integer':
+                {
+                    $this->validateMultipleOf($data, $schema);
+                    $this->validateMinimum($data, $schema);
+                    $this->validateExclusiveMinimum($data, $schema);
+                    $this->validateMaximum($data, $schema);
+                    $this->validateExclusiveMaximum($data, $schema);
+                    break;
+                }
+            case 'object':
+                {
+                    $this->validateProperties($data, $schema);
+                    $this->validateAdditionalProperties($data, $schema);
+                    $this->validateRequired($data, $schema);
+                    $this->validatePropertyNames($data, $schema);
+                    $this->validateMinProperties($data, $schema);
+                    $this->validateMaxProperties($data, $schema);
+                    $this->validateDependencies($data, $schema);
+                    $this->validatePatternProperties($data, $schema);
+                    break;
+                }
+            case 'array':
+                {
+                    $this->validateItems($data, $schema);
+                    $this->validateContains($data, $schema);
+                    $this->validateAdditionalItems($data, $schema);
+                    $this->validateMinItems($data, $schema);
+                    $this->validateMaxItems($data, $schema);
+                    $this->validateUniqueItems($data, $schema);
+                    break;
+                }
+        }
 
         return $data;
     }
@@ -120,7 +173,7 @@ class Validator
             }
         } else {
             throw new ValidationException(sprintf(
-                'There is provided schema with types "%s" which not match with the data type "%s" (%s)',
+                'There is provided schema with type/s "%s" which not match with the data type "%s" (%s)',
                 implode(';', $schema->storage()->type),
                 $dataType,
                 $schema->getPath() . '/type'
@@ -142,6 +195,479 @@ class Validator
                 'Provided data is not validated with format "%s" (%s)',
                 $format,
                 $schema->getPath() . '/format'
+            ));
+        }
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateIf(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'if')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateThen(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'then')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateElse(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'else')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateConst(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'const')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateEnum(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'enum')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateAllOf(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'allOf')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateAnyOf(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'anyOf')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateOneOf(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'oneOf')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateNot(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'not')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMinLength(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'minLength')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMaxLength(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'maxLength')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validatePattern(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'pattern')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateContentMediaType(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'contentMediaType')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateContentEncoding(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'contentEncoding')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMultipleOf(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'multipleOf')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMinimum(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'minimum')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateExclusiveMinimum(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'exclusiveMinimum')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMaximum(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'maximum')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateExclusiveMaximum(&$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'exclusiveMaximum')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'properties')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateAdditionalProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'additionalProperties')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateRequired(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'required')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validatePropertyNames(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'propertyNames')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMinProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'minProperties')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateMaxProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'maxProperties')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateDependencies(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'dependencies')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validatePatternProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'patternProperties')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateItems(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'items')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateContains(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'contains')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * @todo
+     */
+    protected function validateAdditionalItems(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'additionalItems')) {
+            return;
+        }
+
+        // @todo
+    }
+
+    /**
+     * Validate minItems
+     * @param array $data
+     * @param Schema $schema
+     * @throws ValidationException
+     */
+    protected function validateMinItems(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'minItems')) {
+            return;
+        }
+
+        // Check array length
+        if (count($data) < $schema->storage()->minItems) {
+            throw new ValidationException(sprintf(
+                'Min items are "%s" but your array contains "%s" items (%s)',
+                $schema->storage()->minItems,
+                count($data),
+                $schema->getPath() . '/minItems'
+            ));
+        }
+    }
+
+    /**
+     * Validate maxItems
+     * @param array $data
+     * @param Schema $schema
+     * @throws ValidationException
+     */
+    protected function validateMaxItems(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'maxItems')) {
+            return;
+        }
+
+        // Check array length
+        if (count($data) > $schema->storage()->maxItems) {
+            throw new ValidationException(sprintf(
+                'Max items are "%s" but your array contains "%s" items (%s)',
+                $schema->storage()->maxItems,
+                count($data),
+                $schema->getPath() . '/maxItems'
+            ));
+        }
+    }
+
+    /**
+     * Validate uniqueItems
+     * @param $data
+     * @param Schema $schema
+     * @throws ValidationException
+     */
+    protected function validateUniqueItems(array &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'uniqueItems')) {
+            return;
+        }
+
+        // Get items length
+        $itemsLength = count($data);
+
+        // Collect all values as string/integer and check the unique length
+        $tmp = [];
+        foreach ($data as $item) {
+            if (in_array(gettype($item), ['integer', 'string'])) {
+                $tmp[] = $item;
+            } else {
+                $tmp[] = serialize($item);
+            }
+        }
+
+        // Check the values length
+        if ($itemsLength !== count(array_count_values($tmp))) {
+            throw new ValidationException(sprintf(
+                'You have value array which contains non unique values (%s)',
+                $schema->getPath() . '/type'
             ));
         }
     }

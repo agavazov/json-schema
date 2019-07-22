@@ -23,5 +23,15 @@
         "description": "object schema - minProperties is higher than maxProperties",
         "schema": {"type": "object", "minProperties": 10, "maxProperties": 1},
         "valid": false
+    },
+    {
+        "description": "object schema - minProperties is negative",
+        "schema": {"type": "string", "minProperties": -10},
+        "valid": false
+    },
+    {
+        "description": "object schema - maxProperties is negative",
+        "schema": {"type": "string", "maxProperties": -10},
+        "valid": false
     }
 ]

@@ -23,5 +23,15 @@
         "description": "string schema - minLength is higher than maxLength",
         "schema": {"type": "string", "minLength": 10, "maxLength": 1},
         "valid": false
+    },
+    {
+        "description": "string schema - minLength is negative",
+        "schema": {"type": "string", "minLength": -10},
+        "valid": false
+    },
+    {
+        "description": "string schema - maxLength is negative",
+        "schema": {"type": "string", "maxLength": -10},
+        "valid": false
     }
 ]
