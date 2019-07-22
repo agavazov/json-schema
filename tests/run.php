@@ -4,11 +4,24 @@ require __DIR__ . './../vendor/autoload.php';
 
 class Tests
 {
+    const FILTER_INCLUDE = 1;
+    const FILTER_EXCLUDE = 2;
+
+    const SHOW_ALL = 1;
+    const SHOW_SUCCESS = 2;
+    const SHOW_FAIL = 3;
+
     /**
      * Validator instance
      * @var \FrontLayer\JsonSchema\Validator
      */
     protected $validator;
+
+    /**
+     * Show only
+     * @var int
+     */
+    protected $showOnly = self::SHOW_ALL;
 
     /**
      * Collected tests
@@ -17,23 +30,28 @@ class Tests
     protected $testCollections = [];
 
     /**
-     * Filter by file
-     * @var null|string
+     * Filter by string search mapped with types
+     * @var object
      */
-    protected $specificFile = null;
-
-    /**
-     * Filter by description
-     * @var null|string
-     */
-    protected $descriptionSearch = null;
+    protected $filters = [];
 
     /**
      * Tests constructor.
      */
     public function __construct()
     {
+        $this->filters = (object)[]; // @todo move it to class body when PHP is ready for this syntax
+
         $this->validator = new \FrontLayer\JsonSchema\Validator();
+    }
+
+    /**
+     * Show only: all/fail/success
+     * @param int $what
+     */
+    public function showOnly(int $what = self::SHOW_ALL): void
+    {
+        $this->showOnly = $what;
     }
 
     /**
@@ -70,13 +88,54 @@ class Tests
 
     /**
      * Specify which tests to run
-     * @param string|null $specificFile
-     * @param string|null $descriptionSearch
+     * @param string $search
+     * @param int $type
      */
-    public function addFilter(string $specificFile = null, string $descriptionSearch = null): void
+    public function addFilter(string $search, int $type): void
     {
-        $this->specificFile = $specificFile;
-        $this->descriptionSearch = $descriptionSearch;
+        $this->filters->{$type}[] = $search;
+    }
+
+    /**
+     * Check is the test data match with the filters
+     * @param string $testInfo
+     * @return bool
+     */
+    protected function checkFilter(string $testInfo): bool
+    {
+        $success = true;
+
+        if (!empty($this->filters->{self::FILTER_INCLUDE})) {
+            $match = false;
+
+            foreach ($this->filters->{self::FILTER_INCLUDE} as $search) {
+                if (strstr($testInfo, $search) !== false) {
+                    $match = true;
+                    break;
+                }
+            }
+
+            if (!$match) {
+                $success = false;
+            }
+        }
+
+        if (!empty($this->filters->{self::FILTER_EXCLUDE})) {
+            $match = false;
+
+            foreach ($this->filters->{self::FILTER_EXCLUDE} as $search) {
+                if (strstr($testInfo, $search) !== false) {
+                    $match = true;
+                    break;
+                }
+            }
+
+            if ($match) {
+                $success = false;
+            }
+        }
+
+        return $success;
     }
 
     /**
@@ -86,10 +145,6 @@ class Tests
     {
         // Run tests
         foreach ($this->testCollections as $collection) {
-            if ($this->specificFile && $this->specificFile !== $collection->file) {
-                continue;
-            }
-
             foreach ($collection->content as $content) {
                 $testData = empty($collection->schemaOnly);
 
@@ -119,7 +174,7 @@ class Tests
      */
     protected function testData($test, $schema, string $file, string $description): void
     {
-        if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
+        if (!$this->checkFilter($file . $description)) {
             return;
         }
 
@@ -168,7 +223,7 @@ class Tests
      */
     protected function testSchema(bool $valid, $schema, string $file, string $description): void
     {
-        if ($this->descriptionSearch && strstr($description, $this->descriptionSearch) === false) {
+        if (!$this->checkFilter($file . $description)) {
             return;
         }
 
@@ -205,6 +260,16 @@ class Tests
      */
     public function results(bool $success, string $description, string $file = null, ?\Exception $exceptionMessage = null): void
     {
+        if ($this->showOnly !== self::SHOW_ALL) {
+            if ($this->showOnly === self::SHOW_SUCCESS && $success == !true) {
+                return;
+            }
+
+            if ($this->showOnly === self::SHOW_FAIL && $success === true) {
+                return;
+            }
+        }
+
         $log = '';
         if ($success) {
             $log .= 'SUCCESS: ';
@@ -230,5 +295,10 @@ class Tests
 $test = new Tests();
 $test->addCollection('./data', false);
 $test->addCollection('./schema', true);
-//$test->addFilter('./data/draft7/_type.json');
+
+$test->showOnly(Tests::SHOW_FAIL);
+
+$test->addFilter('maxItems validation::ignores non-arrays', Tests::FILTER_EXCLUDE);
+$test->addFilter('minItems validation::ignores non-arrays', Tests::FILTER_EXCLUDE);
+
 $test->run();
