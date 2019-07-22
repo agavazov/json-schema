@@ -435,6 +435,15 @@ class Schema
                 $this->getPath() . '/minLength'
             ));
         }
+
+        // Check positive value
+        if ($this->storage->minLength < 0) {
+            throw new SchemaException(sprintf(
+                '"minLength" must be positive integer, you have "%s" (%s)',
+                $this->storage->minLength,
+                $this->getPath() . '/minLength'
+            ));
+        }
     }
 
     /**
@@ -453,6 +462,15 @@ class Schema
             throw new SchemaException(sprintf(
                 'You have "maxLength" which value is not an integer but it is "%s" (%s)',
                 gettype($this->storage->maxLength),
+                $this->getPath() . '/maxLength'
+            ));
+        }
+
+        // Check positive value
+        if ($this->storage->maxLength < 0) {
+            throw new SchemaException(sprintf(
+                '"maxLength" must be positive integer, you have "%s" (%s)',
+                $this->storage->maxLength,
                 $this->getPath() . '/maxLength'
             ));
         }
@@ -806,6 +824,15 @@ class Schema
                 $this->getPath() . '/minProperties'
             ));
         }
+
+        // Check positive value
+        if ($this->storage->minProperties < 0) {
+            throw new SchemaException(sprintf(
+                '"minProperties" must be positive integer, you have "%s" (%s)',
+                $this->storage->minProperties,
+                $this->getPath() . '/minProperties'
+            ));
+        }
     }
 
     /**
@@ -824,6 +851,15 @@ class Schema
             throw new SchemaException(sprintf(
                 'You have "maxProperties" which value is not a "integer" but it is "%s" (%s)',
                 gettype($this->storage->maxProperties),
+                $this->getPath() . '/maxProperties'
+            ));
+        }
+
+        // Check positive value
+        if ($this->storage->maxProperties < 0) {
+            throw new SchemaException(sprintf(
+                '"maxProperties" must be positive integer, you have "%s" (%s)',
+                $this->storage->maxProperties,
                 $this->getPath() . '/maxProperties'
             ));
         }
@@ -1013,6 +1049,15 @@ class Schema
                 $this->getPath() . '/minItems'
             ));
         }
+
+        // Check positive value
+        if ($this->storage->minItems < 0) {
+            throw new SchemaException(sprintf(
+                '"minItems" must be positive integer, you have "%s" (%s)',
+                $this->storage->minItems,
+                $this->getPath() . '/minItems'
+            ));
+        }
     }
 
     /**
@@ -1031,6 +1076,15 @@ class Schema
             throw new SchemaException(sprintf(
                 'You have "maxItems" which value is not an integer but it is "%s" (%s)',
                 gettype($this->storage->maxItems),
+                $this->getPath() . '/maxItems'
+            ));
+        }
+
+        // Check positive value
+        if ($this->storage->maxItems < 0) {
+            throw new SchemaException(sprintf(
+                '"maxItems" must be positive integer, you have "%s" (%s)',
+                $this->storage->maxItems,
                 $this->getPath() . '/maxItems'
             ));
         }
