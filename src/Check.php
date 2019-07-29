@@ -71,6 +71,16 @@ class Check
     }
 
     /**
+     * Null validation
+     * @param $data
+     * @return bool
+     */
+    public static function null($data): bool
+    {
+        return is_null($data);
+    }
+
+    /**
      * Validate date and time
      * @param string $dateTime
      * @return bool
@@ -258,7 +268,7 @@ class Check
             }
         }
 
-        $newIri = self::buildUrl($iriData);
+        $newIri = Helper::buildUrl($iriData);
 
         return self::uri($newIri);
     }
@@ -277,7 +287,7 @@ class Check
             }
         }
 
-        $newIri = self::buildUrl($iriData);
+        $newIri = Helper::buildUrl($iriData);
 
         return self::uriReference($newIri);
     }
@@ -379,56 +389,5 @@ class Check
     public static function fragment(string $fragment): bool
     {
         return (bool)preg_match('/^(?:(%[0-9a-f]{2})|[a-z0-9\/:@\-._~\!\$&\'\(\)*+,;=])*$/i', $fragment);
-    }
-
-    /**
-     * Combine url parts
-     * @param object $components
-     * @return string
-     */
-    protected static function buildUrl(object $components): string
-    {
-        if (empty($components)) {
-            return '';
-        }
-
-        $uri = $components->path ?? '/';
-
-        if (isset($components->query)) {
-            $uri .= '?' . $components->query;
-        }
-
-        if (isset($components->fragment)) {
-            $uri .= '#' . $components->fragment;
-        }
-
-        if (isset($components->host)) {
-            $authority = $components->host;
-
-            if (isset($components->port)) {
-                $authority .= ':' . $components->port;
-            }
-
-            if (isset($components->user)) {
-                $authority = $components->user . '@' . $authority;
-            }
-
-            if ($uri !== '') {
-                if ($uri[0] !== '/' && $uri[0] !== '?' && $uri[0] !== '#') {
-                    $uri = '/' . $uri;
-                }
-            }
-
-            $uri = '//' . $authority . $uri;
-        }
-
-        if (isset($components->scheme)) {
-            if ('file' === $components->scheme) {
-                $uri = '//' . $uri;
-            }
-            return $components->scheme . ':' . $uri;
-        }
-
-        return $uri !== false ? $uri : '';
     }
 }

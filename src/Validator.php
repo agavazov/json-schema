@@ -124,9 +124,14 @@ class Validator
             }
         }
 
-        // When there is no type the validation will allow everything // @todo recheck is this valid rule
-        if (!property_exists($schema->storage(), 'type')) {
+        // When there is no type the validation will allow everything
+        if (!property_exists($schema->storage(), 'type') || count($schema->storage()->type) === 0) {
             return;
+        }
+
+        // Fix type cases
+        foreach ($schema->storage()->type as $key => $value) {
+            $schema->storage()->type[$key] = strtolower($value);
         }
 
         // Cast only if there is one type
@@ -137,8 +142,8 @@ class Validator
         }
 
         // Decide which format to choose
-        $dataType = gettype($data);
-        $matchType = null;
+        $dataType = strtolower(gettype($data));
+        $matchType = false;
 
         // Special integer/number cases and mixes
         if ($dataType === 'double' || $dataType === 'float') {
@@ -160,7 +165,7 @@ class Validator
             }
         }
 
-        if ($matchType !== null) {
+        if ($matchType !== false) {
             $schema->setMainType((string)$matchType);
 
             if (!call_user_func_array(__NAMESPACE__ . '\\Check::' . $schema->getMainType(), [$data])) {
@@ -239,7 +244,10 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate const
+     * @param $data
+     * @param Schema $schema
+     * @throws ValidationException
      */
     protected function validateConst(&$data, Schema $schema): void
     {
@@ -248,11 +256,20 @@ class Validator
             return;
         }
 
-        // @todo
+        if (Helper::compare($data, $schema->storage()->const)) {
+            return;
+        }
+
+        throw new ValidationException(sprintf(
+            $schema->getPath() . '/const'
+        ));
     }
 
     /**
-     * @todo
+     * Validate enum
+     * @param $data
+     * @param Schema $schema
+     * @throws ValidationException
      */
     protected function validateEnum(&$data, Schema $schema): void
     {
@@ -261,7 +278,17 @@ class Validator
             return;
         }
 
-        // @todo
+        foreach ($schema->storage()->enum as $enumData) {
+            if (Helper::compare($data, $enumData)) {
+                return;
+            }
+        }
+
+        throw new ValidationException(sprintf(
+            'Non of provided "%d" enums matches with the provided data (%s)',
+            count($schema->storage()->enum),
+            $schema->getPath() . '/enum'
+        ));
     }
 
     /**
@@ -313,7 +340,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -326,7 +353,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -339,7 +366,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -352,7 +379,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -391,7 +418,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -404,7 +431,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -417,7 +444,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -430,7 +457,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -443,7 +470,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -473,7 +500,10 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate required
+     * @param object $data
+     * @param Schema $schema
+     * @throws ValidationException
      */
     protected function validateRequired(object &$data, Schema $schema): void
     {
@@ -482,7 +512,16 @@ class Validator
             return;
         }
 
-        // @todo
+        // Check for each property
+        foreach ($schema->storage()->required as $required) {
+            if (!property_exists($data, $required)) {
+                throw new ValidationException(sprintf(
+                    'You have missing property key "%s" (%s)',
+                    $required,
+                    $schema->getPath() . '/required'
+                ));
+            }
+        }
     }
 
     /**
@@ -508,7 +547,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -521,7 +560,7 @@ class Validator
             return;
         }
 
-        // @todo
+        // @todo ok
     }
 
     /**
@@ -561,6 +600,11 @@ class Validator
         }
 
         // @todo
+
+        // Check for dependencies
+        if (property_exists($schema->storage(), 'additionalItems')) {
+            $this->validateAdditionalItems($data, $schema);
+        }
     }
 
     /**
@@ -584,6 +628,11 @@ class Validator
         // Check exists
         if (!property_exists($schema->storage(), 'additionalItems')) {
             return;
+        }
+
+        // Check for dependencies
+        if (property_exists($schema->storage(), 'items')) {
+            // @todo
         }
 
         // @todo

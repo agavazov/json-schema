@@ -127,4 +127,18 @@ class Cast
 
         return $data;
     }
+
+    /**
+     * Try to cast income data to null
+     * @param mixed $data
+     * @return mixed
+     */
+    public static function null($data)
+    {
+        if ($data == 'null') {
+            return null;
+        }
+
+        return $data;
+    }
 }

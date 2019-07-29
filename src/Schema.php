@@ -312,7 +312,6 @@ class Schema
 
     /**
      * Check const property
-     * @throws SchemaException
      */
     protected function processConst(): void
     {
@@ -321,14 +320,7 @@ class Schema
             return;
         }
 
-        // Register or overwrite "enum" with current value of "const"
-        $this->storage->enum = [$this->storage->const];
-
-        // Remove const because enum will take care
-        unset($this->storage->const);
-
-        // Validate enum value
-        $this->processEnum();
+        // Do nothing
     }
 
     /**
