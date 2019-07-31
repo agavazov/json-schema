@@ -299,25 +299,11 @@ $test->addCollection('./schema', true);
 $test->showOnly(Tests::SHOW_FAIL);
 
 // @todo - I can`t find documentation of this ridiculous scenario (ask for official confirmation)
-$test->addFilter('minItems validation::ignores non-arrays', Tests::FILTER_EXCLUDE);
-$test->addFilter('maxItems validation::ignores non-arrays', Tests::FILTER_EXCLUDE);
-$test->addFilter('required validation::ignores arrays', Tests::FILTER_EXCLUDE);
-$test->addFilter('required validation::ignores strings', Tests::FILTER_EXCLUDE);
-$test->addFilter('required validation::ignores other non-objects', Tests::FILTER_EXCLUDE);
-$test->addFilter('minLength validation::ignores non-strings', Tests::FILTER_EXCLUDE);
-$test->addFilter('maxLength validation::ignores non-strings', Tests::FILTER_EXCLUDE);
-$test->addFilter('minProperties validation::ignores arrays', Tests::FILTER_EXCLUDE);
-$test->addFilter('minProperties validation::ignores strings', Tests::FILTER_EXCLUDE);
-$test->addFilter('minProperties validation::ignores other non-objects', Tests::FILTER_EXCLUDE);
-$test->addFilter('maxProperties validation::ignores arrays', Tests::FILTER_EXCLUDE);
-$test->addFilter('maxProperties validation::ignores strings', Tests::FILTER_EXCLUDE);
-$test->addFilter('maxProperties validation::ignores other non-objects', Tests::FILTER_EXCLUDE);
-$test->addFilter('minimum validation with signed integer::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('minimum validation::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('maximum validation::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('exclusiveMinimum validation::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('exclusiveMaximum validation::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('by int::ignores non-numbers', Tests::FILTER_EXCLUDE);
-$test->addFilter('pattern validation::ignores non-strings', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores arrays', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores non-arrays', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores non-numbers', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores strings', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores non-strings', Tests::FILTER_EXCLUDE);
+$test->addFilter('ignores other non-objects', Tests::FILTER_EXCLUDE);
 
 $test->run();
