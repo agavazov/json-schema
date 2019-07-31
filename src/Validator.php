@@ -56,7 +56,21 @@ class Validator
             return $item->type;
         }, (array)$this->formats);
 
+        // Transform to schema
         $schema = new Schema($schema, $formatsMap);
+
+        // If the whole schema is boolean
+        if (is_bool($schema->storage())) {
+            // If schema is "false" then it will disallow everything
+            if ($schema->storage() === false) {
+                throw new ValidationException(sprintf(
+                    'Provided schema is with value "false" which means it will disallow everything (%s)',
+                    $schema->getPath()
+                ));
+            } else {
+                return true; // When is "true" then it will allow everything
+            }
+        }
 
         // Validate
         $this->validateType($data, $schema, ($mode & self::MODE_CAST) === self::MODE_CAST);
@@ -127,19 +141,6 @@ class Validator
      */
     protected function validateType(&$data, Schema $schema, $cast = false): void
     {
-        // If the whole schema is boolean
-        if (is_bool($schema->storage())) {
-            // If schema is "false" then it will disallow everything
-            if ($schema->storage() === true) {
-                throw new ValidationException(sprintf(
-                    'Provided schema is with value "false" which means it will disallow everything (%s)',
-                    $schema->getPath()
-                ));
-            } else {
-                return; // When is "true" then it will allow everything
-            }
-        }
-
         // When there is no type the validation will allow everything
         if (!property_exists($schema->storage(), 'type') || count($schema->storage()->type) === 0) {
             return;
