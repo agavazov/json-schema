@@ -1,0 +1,18 @@
+[
+    {
+        "description":
+            "patternProperties validates properties matching a regex",
+        "schema": {
+            "patternProperties": {
+                "f.*o": {"type": "integer"}
+            }
+        },
+        "tests": [
+            {
+                "description": "a single invalid match is invalid",
+                "data": {"foo": "bar", "fooooo": 2},
+                "valid": false
+            }
+        ]
+    }
+]

@@ -28,7 +28,7 @@ class Schema
         $this->path = $path ?: 'schema::/';
 
         // Check for valid property type
-        if (!is_object($schema) && !is_bool($schema)) {
+        if ((!is_object($schema) && !is_bool($schema)) || $schema instanceof Schema) {
             throw new SchemaException(sprintf(
                 'You have "schema" which value is not a "object" or "boolean" but it is "%s" (%s)',
                 gettype($schema),
@@ -56,8 +56,8 @@ class Schema
         $this->processMinLength();
         $this->processMaxLength();
         $this->processPattern();
-        $this->processContentMediaType();
         $this->processContentEncoding();
+        $this->processContentMediaType();
         $this->processMultipleOf();
         $this->processMinimum();
         $this->processMaximum();
@@ -269,11 +269,11 @@ class Schema
     protected function processIf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'if')) {
+        if (!property_exists($this->storage, 'if') || $this->storage->if instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/if';
         $this->storage->if = new Schema($this->storage->if, $this->formatsMap, $newPath);
     }
@@ -285,11 +285,11 @@ class Schema
     protected function processThen(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'then')) {
+        if (!property_exists($this->storage, 'then') || $this->storage->then instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/then';
         $this->storage->then = new Schema($this->storage->then, $this->formatsMap, $newPath);
     }
@@ -301,11 +301,11 @@ class Schema
     protected function processElse(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'else')) {
+        if (!property_exists($this->storage, 'else') || $this->storage->else instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/else';
         $this->storage->else = new Schema($this->storage->else, $this->formatsMap, $newPath);
     }
@@ -351,11 +351,11 @@ class Schema
     protected function processAllOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'allOf')) {
+        if (!property_exists($this->storage, 'allOf') || $this->storage->allOf instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/allOf';
         $this->storage->allOf = new Schema($this->storage->allOf, $this->formatsMap, $newPath);
     }
@@ -367,11 +367,11 @@ class Schema
     protected function processAnyOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'anyOf')) {
+        if (!property_exists($this->storage, 'anyOf') || $this->storage->anyOf instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/anyOf';
         $this->storage->anyOf = new Schema($this->storage->anyOf, $this->formatsMap, $newPath);
     }
@@ -383,11 +383,11 @@ class Schema
     protected function processOneOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'oneOf')) {
+        if (!property_exists($this->storage, 'oneOf') || $this->storage->oneOf instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/oneOf';
         $this->storage->oneOf = new Schema($this->storage->oneOf, $this->formatsMap, $newPath);
     }
@@ -399,11 +399,11 @@ class Schema
     protected function processNot(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'not')) {
+        if (!property_exists($this->storage, 'not') || $this->storage->not instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/not';
         $this->storage->not = new Schema($this->storage->not, $this->formatsMap, $newPath);
     }
@@ -510,6 +510,27 @@ class Schema
     }
 
     /**
+     * Check contentEncoding property
+     * @throws SchemaException
+     */
+    protected function processContentEncoding(): void
+    {
+        // Check exists
+        if (!property_exists($this->storage, 'contentEncoding')) {
+            return;
+        }
+
+        // Check for valid property type
+        if (!is_string($this->storage->contentEncoding)) {
+            throw new SchemaException(sprintf(
+                'You have "contentEncoding" which value is not a "string" but it is "%s" (%s)',
+                gettype($this->storage->contentEncoding),
+                $this->getPath() . '/contentEncoding'
+            ));
+        }
+    }
+
+    /**
      * Check contentMediaType property
      * @throws SchemaException
      */
@@ -534,27 +555,6 @@ class Schema
             throw new SchemaException(sprintf(
                 'You have "contentMediaType" which is not well formatted. Slash "/" is missing (%s)',
                 $this->getPath() . '/contentMediaType'
-            ));
-        }
-    }
-
-    /**
-     * Check contentEncoding property
-     * @throws SchemaException
-     */
-    protected function processContentEncoding(): void
-    {
-        // Check exists
-        if (!property_exists($this->storage, 'contentEncoding')) {
-            return;
-        }
-
-        // Check for valid property type
-        if (!is_string($this->storage->contentEncoding)) {
-            throw new SchemaException(sprintf(
-                'You have "contentEncoding" which value is not a "string" but it is "%s" (%s)',
-                gettype($this->storage->contentEncoding),
-                $this->getPath() . '/contentEncoding'
             ));
         }
     }
@@ -741,11 +741,11 @@ class Schema
     protected function processAdditionalProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'additionalProperties')) {
+        if (!property_exists($this->storage, 'additionalProperties') || $this->storage->additionalProperties instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/additionalProperties';
         $this->storage->additionalProperties = new Schema($this->storage->additionalProperties, $this->formatsMap, $newPath);
     }
@@ -788,11 +788,11 @@ class Schema
     protected function processPropertyNames(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'propertyNames')) {
+        if (!property_exists($this->storage, 'propertyNames') || $this->storage->propertyNames instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/propertyNames';
         $this->storage->propertyNames = new Schema($this->storage->propertyNames, $this->formatsMap, $newPath);
     }
@@ -891,6 +891,11 @@ class Schema
 
         // Check the schema
         foreach ($this->storage->dependencies as $dKey => $schema) {
+            // If is already transformed to Schema
+            if ($schema instanceof Schema) {
+                continue;
+            }
+
             // If schema is array
             if (is_array($schema)) {
                 // Check that each item is a string
@@ -911,7 +916,7 @@ class Schema
                 ];
             }
 
-            // If schema is object
+            // Transform to schema
             $newPath = $this->getPath() . '/dependencies/' . $dKey;
             $this->storage->dependencies->{$dKey} = new Schema($this->storage->dependencies->{$dKey}, $this->formatsMap, $newPath);
         }
@@ -939,6 +944,11 @@ class Schema
 
         // Check the structure of patternProperties
         foreach ($this->storage->patternProperties as $keyPattern => $schema) {
+            // If is already transformed to Schema
+            if ($schema instanceof Schema) {
+                continue;
+            }
+
             // Check key pattern
             if (!Check::regex($keyPattern)) {
                 throw new SchemaException(sprintf(
@@ -948,7 +958,7 @@ class Schema
                 ));
             }
 
-            // Set value to Schema
+            // Transform to schema
             $newPath = $this->getPath() . '/patternProperties/' . $keyPattern;
             $this->storage->patternProperties->{$keyPattern} = new Schema($schema, $this->formatsMap, $newPath);
         }
@@ -977,6 +987,11 @@ class Schema
         // Validate multiple item schema
         if (is_array($this->storage->items)) {
             foreach ($this->storage->items as $key => $schema) {
+                // If is already transformed to Schema
+                if ($schema instanceof Schema) {
+                    return;
+                }
+
                 // Transform to schema
                 $newPath = $this->getPath() . '/items[' . $key . ']';
                 $this->storage->items[$key] = new Schema($schema, $this->formatsMap, $newPath);
@@ -985,6 +1000,12 @@ class Schema
 
         // Validate single item schema
         if (is_object($this->storage->items) || is_bool($this->storage->items)) {
+            // If is already transformed to Schema
+            if ($this->storage->items instanceof Schema) {
+                return;
+            }
+
+            // Transform to schema
             $newPath = $this->getPath() . '/items';
             $this->storage->items = new Schema($this->storage->items, $this->formatsMap, $newPath);
         }
@@ -997,7 +1018,7 @@ class Schema
     protected function processContains(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'contains')) {
+        if (!property_exists($this->storage, 'contains') || $this->storage->contains instanceof Schema) {
             return;
         }
 
@@ -1013,11 +1034,11 @@ class Schema
     protected function processAdditionalItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'additionalItems')) {
+        if (!property_exists($this->storage, 'additionalItems') || $this->storage->additionalItems instanceof Schema) {
             return;
         }
 
-        // Create sub-schema object
+        // Transform to schema
         $newPath = $this->getPath() . '/additionalItems';
         $this->storage->additionalItems = new Schema($this->storage->additionalItems, $this->formatsMap, $newPath);
     }

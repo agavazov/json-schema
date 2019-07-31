@@ -40,6 +40,15 @@ class Validator
         ];
     }
 
+    /**
+     * Validate data against the schema
+     * @param $data
+     * @param object|bool $schema
+     * @param int $mode
+     * @return mixed
+     * @throws SchemaException
+     * @throws ValidationException
+     */
     public function validate($data, $schema, int $mode = 0)
     {
         // Make schema variable to be instance of Schema class
@@ -68,8 +77,8 @@ class Validator
                     $this->validateMinLength($data, $schema);
                     $this->validateMaxLength($data, $schema);
                     $this->validatePattern($data, $schema);
-                    $this->validateContentMediaType($data, $schema);
                     $this->validateContentEncoding($data, $schema);
+                    $this->validateContentMediaType($data, $schema);
                     break;
                 }
             case 'number':
@@ -418,7 +427,7 @@ class Validator
         }
 
         // Check pattern match
-        if (!preg_match('{' . $schema->storage()->pattern . '}u', $data)) {
+        if (!preg_match('/' . $schema->storage()->pattern . '/u', $data)) {
             throw new ValidationException(sprintf(
                 'Pattern "%s" not match with the input data (%s)',
                 $schema->storage()->pattern,
@@ -428,7 +437,44 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate content encoding
+     * @param string $data
+     * @param Schema $schema
+     * @throws ValidationException
+     */
+    protected function validateContentEncoding(string &$data, Schema $schema): void
+    {
+        // Check exists
+        if (!property_exists($schema->storage(), 'contentEncoding')) {
+            return;
+        }
+
+        $encoded = $data;
+
+        switch ($schema->storage()->contentEncoding) {
+            case 'base64':
+                {
+                    $encoded = base64_decode($encoded, true);
+                    break;
+                }
+        }
+
+        if ($encoded === false) {
+            throw new ValidationException(sprintf(
+                'The data can`t be encoded by "%d" (%s)',
+                $schema->storage()->contentEncoding,
+                $schema->getPath() . '/contentEncoding'
+            ));
+        } else {
+            $data = $encoded;
+        }
+    }
+
+    /**
+     * Validate content type
+     * @param string $data
+     * @param Schema $schema
+     * @throws ValidationException
      */
     protected function validateContentMediaType(string $data, Schema $schema): void
     {
@@ -437,20 +483,27 @@ class Validator
             return;
         }
 
-        // @todo
-    }
+        $isValid = true;
 
-    /**
-     * @todo
-     */
-    protected function validateContentEncoding(string $data, Schema $schema): void
-    {
-        // Check exists
-        if (!property_exists($schema->storage(), 'contentEncoding')) {
-            return;
+        switch ($schema->storage()->contentMediaType) {
+            case 'application/json':
+                {
+                    json_decode($data);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $isValid = false;
+                    }
+
+                    break;
+                }
         }
 
-        // @todo
+        if ($isValid !== true) {
+            throw new ValidationException(sprintf(
+                'The input data is not does not validated with content type "%s" (%s)',
+                $schema->storage()->contentMediaType,
+                $schema->getPath() . '/contentMediaType'
+            ));
+        }
     }
 
     /**
@@ -720,16 +773,28 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate pattern properties
+     * @param object $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
-    protected function validatePatternProperties(object $data, Schema $schema): void
+    protected function validatePatternProperties(object &$data, Schema $schema): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'patternProperties')) {
             return;
         }
 
-        // @todo
+        foreach ($schema->storage()->patternProperties as $pattern => $propertySchema) {
+            /* @var $propertySchema Schema */
+
+            foreach ($data as $dataKey => $dataValue) {
+                if (preg_match('/' . $pattern . '/', $dataKey)) {
+                    $data->{$dataKey} = $this->validate($dataValue, $propertySchema->storage());
+                }
+            }
+        }
     }
 
     /**
