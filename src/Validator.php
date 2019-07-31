@@ -700,7 +700,11 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate property names
+     * @param object $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validatePropertyNames(object $data, Schema $schema): void
     {
@@ -709,7 +713,9 @@ class Validator
             return;
         }
 
-        // @todo
+        foreach ($data as $dataKey => $dataValue) {
+            $data->{$dataKey} = $this->validate($dataKey, $schema->storage()->propertyNames->storage());
+        }
     }
 
     /**
