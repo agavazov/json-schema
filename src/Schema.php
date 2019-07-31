@@ -60,8 +60,8 @@ class Schema
         $this->processContentEncoding();
         $this->processMultipleOf();
         $this->processMinimum();
-        $this->processExclusiveMinimum();
         $this->processMaximum();
+        $this->processExclusiveMinimum();
         $this->processExclusiveMaximum();
         $this->processProperties();
         $this->processAdditionalProperties();
@@ -602,40 +602,6 @@ class Schema
     }
 
     /**
-     * Check exclusiveMinimum property
-     * @throws SchemaException
-     */
-    protected function processExclusiveMinimum(): void
-    {
-        // Check exists
-        if (!property_exists($this->storage, 'exclusiveMinimum')) {
-            return;
-        }
-
-        // Check for valid property type
-        if (!is_double($this->storage->exclusiveMinimum) && !is_integer($this->storage->exclusiveMinimum)) {
-            throw new SchemaException(sprintf(
-                'You have "exclusiveMinimum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->storage->exclusiveMinimum),
-                $this->getPath() . '/exclusiveMinimum'
-            ));
-        }
-
-        // minimum checks
-        if (property_exists($this->storage, 'minimum')) {
-            // Check is exclusiveMinimum lower than minimum
-            if ($this->storage->exclusiveMinimum < $this->storage->minimum) {
-                throw new SchemaException(sprintf(
-                    'You have "exclusiveMinimum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
-                    $this->storage->exclusiveMinimum,
-                    $this->storage->minimum,
-                    $this->getPath() . '/exclusiveMinimum'
-                ));
-            }
-        }
-    }
-
-    /**
      * Check maximum property
      * @throws SchemaException
      */
@@ -655,7 +621,7 @@ class Schema
             ));
         }
 
-        // minimum checks
+        // Minimum checks
         if (property_exists($this->storage, 'minimum')) {
             // Check is maximum lower than minimum
             if ($this->storage->maximum < $this->storage->minimum) {
@@ -664,6 +630,40 @@ class Schema
                     $this->storage->maximum,
                     $this->storage->minimum,
                     $this->getPath() . '/maximum'
+                ));
+            }
+        }
+    }
+
+    /**
+     * Check exclusiveMinimum property
+     * @throws SchemaException
+     */
+    protected function processExclusiveMinimum(): void
+    {
+        // Check exists
+        if (!property_exists($this->storage, 'exclusiveMinimum')) {
+            return;
+        }
+
+        // Check for valid property type
+        if (!is_double($this->storage->exclusiveMinimum) && !is_integer($this->storage->exclusiveMinimum)) {
+            throw new SchemaException(sprintf(
+                'You have "exclusiveMinimum" which value is not a "number/integer" but it is "%s" (%s)',
+                gettype($this->storage->exclusiveMinimum),
+                $this->getPath() . '/exclusiveMinimum'
+            ));
+        }
+
+        // Minimum checks
+        if (property_exists($this->storage, 'minimum')) {
+            // Check is exclusiveMinimum lower than minimum
+            if ($this->storage->exclusiveMinimum < $this->storage->minimum) {
+                throw new SchemaException(sprintf(
+                    'You have "exclusiveMinimum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
+                    $this->storage->exclusiveMinimum,
+                    $this->storage->minimum,
+                    $this->getPath() . '/exclusiveMinimum'
                 ));
             }
         }
