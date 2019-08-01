@@ -6,6 +6,7 @@ namespace FrontLayer\JsonSchema;
 class Validator
 {
     const MODE_CAST = 1;
+    const MODE_DISALLOW_ADDITIONALS_BY_DEFAULT = 2; // @todo
 
     protected $formats;
 
@@ -43,7 +44,7 @@ class Validator
     /**
      * Validate data against the schema
      * @param $data
-     * @param object|bool $schema
+     * @param Schema|object|bool $schema
      * @param int $mode
      * @return mixed
      * @throws SchemaException
@@ -57,7 +58,9 @@ class Validator
         }, (array)$this->formats);
 
         // Transform to schema
-        $schema = new Schema($schema, $formatsMap);
+        if (!($schema instanceof Schema)) {
+            $schema = new Schema($schema, $formatsMap);
+        }
 
         // If the whole schema is boolean
         if (is_bool($schema->storage())) {
@@ -71,6 +74,9 @@ class Validator
                 return true; // When is "true" then it will allow everything
             }
         }
+
+        // Check for pseudo arrays
+        $data = Helper::transformPseudoArrays($data);
 
         // Validate
         $this->validateType($data, $schema, ($mode & self::MODE_CAST) === self::MODE_CAST);
@@ -175,6 +181,7 @@ class Validator
             }
         }
 
+        // Check for type match
         foreach ($schema->storage()->type as $type) {
             if ($dataType === $type) {
                 $matchType = $type;
@@ -714,7 +721,7 @@ class Validator
         }
 
         foreach ($data as $dataKey => $dataValue) {
-            $data->{$dataKey} = $this->validate($dataKey, $schema->storage()->propertyNames->storage());
+            $data->{$dataKey} = $this->validate($dataKey, $schema->storage()->propertyNames);
         }
     }
 
@@ -798,27 +805,53 @@ class Validator
 
             foreach ($data as $dataKey => $dataValue) {
                 if (preg_match('/' . $pattern . '/', $dataKey)) {
-                    $data->{$dataKey} = $this->validate($dataValue, $propertySchema->storage());
+                    $data->{$dataKey} = $this->validate($dataValue, $propertySchema);
                 }
             }
         }
     }
 
     /**
-     * @todo
+     * Validate items
+     * @param array $data
+     * @param Schema $schema
+     * @param bool $additionalsDefault
+     * @throws SchemaException
+     * @throws ValidationException
      */
-    protected function validateItems(array $data, Schema $schema): void
+    protected function validateItems(array $data, Schema $schema, $additionalsDefault = true): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'items')) {
             return;
         }
 
-        // @todo
+        // Get additional items
+        $tupleValidation = is_array($schema->storage()->items);
+        $additionalValues = $additionalsDefault;
 
-        // Check for dependencies
         if (property_exists($schema->storage(), 'additionalItems')) {
-            $this->validateAdditionalItems($data, $schema);
+            $additionalValues = $schema->storage()->additionalItems->storage();
+        }
+
+        // Check each data item
+        foreach ($data as $key => $item) {
+            // Tuple validation will check each item by mapped key
+            if ($tupleValidation) {
+                if (array_key_exists($key, $schema->storage()->items)) {
+                    $this->validate($item, $schema->storage()->items[$key]);
+                } elseif (!$additionalValues) {
+                    // If additional items are not allowed the will fail if there is an extra items
+                    throw new ValidationException(sprintf(
+                        'Array item with key "%d" is not declared in tuple item list (%s)',
+                        $key,
+                        $schema->getPath() . '/items'
+                    ));
+                }
+            } else {
+                // Single schema validation will check each item
+                $this->validate($item, $schema->storage()->items);
+            }
         }
     }
 
@@ -843,11 +876,6 @@ class Validator
         // Check exists
         if (!property_exists($schema->storage(), 'additionalItems')) {
             return;
-        }
-
-        // Check for dependencies
-        if (property_exists($schema->storage(), 'items')) {
-            // @todo
         }
 
         // @todo

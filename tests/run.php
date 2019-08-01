@@ -306,4 +306,6 @@ $test->addFilter('ignores strings', Tests::FILTER_EXCLUDE);
 $test->addFilter('ignores non-strings', Tests::FILTER_EXCLUDE);
 $test->addFilter('ignores other non-objects', Tests::FILTER_EXCLUDE);
 
+$test->addFilter('JavaScript pseudo-array is valid', Tests::FILTER_EXCLUDE);
+
 $test->run();

@@ -123,7 +123,7 @@ class Helper
 
     /**
      * Sort 1st level array values
-     * @param $data
+     * @param mixed $data
      * @return array
      */
     public static function sortFirstLevelArrayValues($data)
@@ -146,5 +146,40 @@ class Helper
         }
 
         return array_values($data);
+    }
+
+    /**
+     * Check for pseudo-arrays (build from object)
+     * @param mixed $data
+     * @return mixed
+     */
+    public static function transformPseudoArrays($data)
+    {
+        $dataType = gettype($data);
+
+        if ($dataType !== 'array' && $dataType !== 'object') {
+            return $data;
+        }
+
+        if ($dataType === 'object') {
+            if (property_exists($data, 'length')) {
+                $tmp = (array)$data;
+                unset($tmp['length']);
+                $isAssociative = array_keys($tmp) !== range(0, count($tmp) - 1);
+                if (!$isAssociative) {
+                    return $tmp;
+                }
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            if ($dataType === 'object') {
+                $data->{$key} = self::transformPseudoArrays($data->{$key});
+            } elseif ($dataType === 'array') {
+                $data[$key] = self::transformPseudoArrays($data[$key]);
+            }
+        }
+
+        return $data;
     }
 }
