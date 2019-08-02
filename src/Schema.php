@@ -26,17 +26,21 @@ class Schema
         $this->storage = $schema;
         $this->formatsMap = $formatsMap;
 
-        $schemaType = gettype($schema);
-
         // Set path
         $this->path = $path ?: 'schema::/';
+
+        // Make extends
+        $this->storage = $this->extend($this->storage);
+
+        // Get schema type
+        $schemaType = gettype($this->storage);
 
         // Check for valid property type
         if ($schemaType !== 'object' && $schemaType !== 'boolean') {
             throw new SchemaException(sprintf(
                 'You have "schema" which value is not a "object" or "boolean" but it is "%s" (%s)',
                 gettype($this->storage),
-                $this->path
+                $this->getPath()
             ));
         }
 
@@ -44,13 +48,22 @@ class Schema
         if ($this->storage instanceof Schema) {
             throw new SchemaException(sprintf(
                 'This schema is already transformed with Schema class (%s)',
-                $this->path
+                $this->getPath()
             ));
         }
 
-        // Check for empty empty object. Then will make it "true"
+        // If the schema is empty
         if ($schemaType === 'object') {
-            if (count((array)$this->storage) === 0) {
+            $storageCount = count((array)$this->storage);
+
+            if ($storageCount === 1 && property_exists($this->storage, 'additionalItems') && $this->storage->additionalItems === false) {
+                unset($this->storage->additionalItems);
+                $storageCount--;
+            }
+
+            // Check for empty empty object. Then will make it "true"
+            if ($storageCount === 0) {
+                $this->storage = true;
                 $this->storage = true;
                 $schemaType = 'boolean';
             }
@@ -60,9 +73,6 @@ class Schema
         if ($schemaType === 'boolean') {
             return;
         }
-
-        // Make extends
-        $this->storage = $this->extend($this->storage);
 
         // Check each attribute
         $this->processType();
@@ -123,25 +133,29 @@ class Schema
             throw new SchemaException(sprintf(
                 'Reached more than "%d" recursions. Please check your code (%s)',
                 $maxDepthLevel,
-                $this->path
+                $this->getPath()
             ));
         }
 
         // Direct extend with array reduce
         if ($mainType === 'object' && property_exists($schema, '$ref') && is_string($schema->{'$ref'})) {
-            $extendPath = explode('/', substr($schema->{'$ref'}, 2));
+            if ($schema->{'$ref'} === '#') {
+                $rs = $this->storage;
+            } else {
+                $extendPath = explode('/', substr($schema->{'$ref'}, 2));
 
-            $rs = $this->storage;
-            foreach ($extendPath as $path) {
-                if (!is_object($rs) || !property_exists($rs, $path)) {
-                    throw new SchemaException(sprintf(
-                        'Can`t extend path "%s" (%s)',
-                        $extendPath,
-                        $this->path
-                    ));
+                $rs = $this->storage;
+                foreach ($extendPath as $path) {
+                    if (!is_object($rs) || !property_exists($rs, $path)) {
+                        throw new SchemaException(sprintf(
+                            'Can`t extend path "%s" (%s)',
+                            $schema->{'$ref'},
+                            $this->getPath()
+                        ));
+                    }
+
+                    $rs = $rs->{$path};
                 }
-
-                $rs = $rs->{$path};
             }
 
             return $rs;

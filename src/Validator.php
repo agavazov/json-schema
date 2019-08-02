@@ -965,7 +965,11 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate additional items
+     * @param array $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateAdditionalItems(array &$data, Schema $schema): void
     {
@@ -974,7 +978,27 @@ class Validator
             return;
         }
 
-        // @todo
+        // Get items type
+        $itemsType = property_exists($schema->storage(), 'items') ? gettype($schema->storage()->items) : false;
+
+        // If "items" schema is true then additionalItems check will be skip
+        if ($itemsType === 'object') {
+            if ($schema->storage()->items->storage() === true) {
+                return;
+            }
+        }
+
+        // From which key current items will end
+        $currentItemsEnd = 0;
+        if ($itemsType === 'array') {
+            $currentItemsEnd = count($schema->storage()->items);
+        }
+
+        // Check additional items
+        $dataLength = count($data);
+        for ($i = $currentItemsEnd; $i < $dataLength; $i++) {
+            $this->validate($data[$i], $schema->storage()->additionalItems);
+        }
     }
 
     /**
