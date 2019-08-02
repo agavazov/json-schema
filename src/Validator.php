@@ -844,7 +844,11 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate dependencies
+     * @param object $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateDependencies(object &$data, Schema $schema): void
     {
@@ -853,7 +857,13 @@ class Validator
             return;
         }
 
-        // @todo
+        foreach ($data as $key => $dependencySchema) {
+            /* @var $dependencySchema Schema */
+
+            if (property_exists($schema->storage()->dependencies, $key)) {
+                $this->validate($data, $schema->storage()->dependencies->{$key});
+            }
+        }
     }
 
     /**

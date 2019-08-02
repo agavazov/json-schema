@@ -307,6 +307,7 @@ $test->showOnly(Tests::SHOW_FAIL);
     $test->addFilter('ignores non-strings', Tests::FILTER_EXCLUDE);
     $test->addFilter('ignores other non-objects', Tests::FILTER_EXCLUDE);
     $test->addFilter('contains keyword validation::not array is valid', Tests::FILTER_EXCLUDE);
+    $test->addFilter('empty array of dependencies::non-object is valid', Tests::FILTER_EXCLUDE);
 }
 
 // @todo remove when allOf is ready
