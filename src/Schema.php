@@ -104,10 +104,14 @@ class Schema
 
     /**
      * Make references extends
+     * @param $schema
+     * @param int $depthLevel
+     * @return mixed
+     * @throws SchemaException
      */
     protected function extend($schema, int $depthLevel = 0)
     {
-        $MAX_REF_LEVEL = 100;
+        $maxDepthLevel = 100;
         $mainType = gettype($schema);
 
         if ($mainType !== 'object' && $mainType !== 'array') {
@@ -115,8 +119,12 @@ class Schema
         }
 
         // Check recursion
-        if ($depthLevel >= $MAX_REF_LEVEL) {
-            throw new \Exception(sprintf('OpenApi parser: reached more than %d recursions. Please check your code', $MAX_REF_LEVEL));
+        if ($depthLevel >= $maxDepthLevel) {
+            throw new SchemaException(sprintf(
+                'Reached more than "%d" recursions. Please check your code (%s)',
+                $maxDepthLevel,
+                $this->path
+            ));
         }
 
         // Direct extend with array reduce
@@ -126,7 +134,11 @@ class Schema
             $rs = $this->storage;
             foreach ($extendPath as $path) {
                 if (!is_object($rs) || !property_exists($rs, $path)) {
-                    throw new \Exception(sprintf('OpenApi parser: can`t make extend with this path: %s', $extendPath));
+                    throw new SchemaException(sprintf(
+                        'Can`t extend path "%s" (%s)',
+                        $extendPath,
+                        $this->path
+                    ));
                 }
 
                 $rs = $rs->{$path};
