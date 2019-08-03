@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 require __DIR__ . './../vendor/autoload.php';
 
@@ -11,7 +12,17 @@ class Tests
     const SHOW_SUCCESS = 2;
     const SHOW_FAIL = 3;
 
-    protected $exitCode = 0;
+    /**
+     * Count fail test
+     * @var int
+     */
+    protected $totalFails = 0;
+
+    /**
+     * Count success test
+     * @var int
+     */
+    protected $totalSuccess = 0;
 
     /**
      * Validator instance
@@ -38,6 +49,12 @@ class Tests
     protected $filters = [];
 
     /**
+     * PHP is being run as a CLI
+     * @var bool
+     */
+    protected $isCli = true;
+
+    /**
      * Tests constructor.
      */
     public function __construct()
@@ -45,6 +62,8 @@ class Tests
         $this->filters = (object)[]; // @todo move it to class body when PHP is ready for this syntax
 
         $this->validator = new \FrontLayer\JsonSchema\Validator();
+
+        $this->isCli = PHP_SAPI === 'cli';
     }
 
     /**
@@ -166,7 +185,15 @@ class Tests
             }
         }
 
-        exit($this->exitCode);
+        // Exit
+        if ($this->totalSuccess > 0) {
+            $this->results(true, sprintf('TOTAL SUCCESSFUL TESTS: %d', $this->totalSuccess));
+        }
+
+        if ($this->totalFails > 0) {
+            $this->results(false, sprintf('TOTAL FAILED TESTS: %d', $this->totalFails));
+            exit(1);
+        }
     }
 
     /**
@@ -282,17 +309,31 @@ class Tests
         }
 
         $log .= $description;
-        $log .= ' (' . $file . ')';
+
+        if ($file) {
+            $log .= ' (' . $file . ')';
+        }
 
         if ($exceptionMessage) {
             $log .= ' > ' . $exceptionMessage->getMessage();
         }
 
         if (!$success) {
-            $this->exitCode = 1;
-            print '<pre style="color: red;">' . $log . '</pre>';
+            $this->totalFails++;
+
+            if ($this->isCli) {
+                print PHP_EOL . "\e[0;31;40m" . $log . "!\e[0m" . PHP_EOL;
+            } else {
+                print '<pre style="color: red;">' . $log . '</pre>';
+            }
         } else {
-            print '<pre style="color: #a3d39b;">' . $log . '</pre>';
+            $this->totalSuccess++;
+
+            if ($this->isCli) {
+                print PHP_EOL . "\e[0;32;40m" . $log . "!\e[0m" . PHP_EOL;
+            } else {
+                print '<pre style="color: #a3d39b;">' . $log . '</pre>';
+            }
         }
     }
 }
@@ -301,7 +342,7 @@ $test = new Tests();
 $test->addCollection(__DIR__ . '/data', false);
 $test->addCollection(__DIR__ . '/schema', true);
 
-$test->showOnly(Tests::SHOW_FAIL);
+//$test->showOnly(Tests::SHOW_FAIL);
 
 // @todo - Check exactly where in the documentation we can pass different types (if it`s passable fix this and add extra FLAG for strict mode)
 {
