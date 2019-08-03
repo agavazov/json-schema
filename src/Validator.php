@@ -79,7 +79,7 @@ class Validator
         $data = Helper::transformPseudoArrays($data);
 
         // Validate
-        $this->validateType($data, $schema, ($mode & self::MODE_CAST) === self::MODE_CAST);
+        $this->validateType($data, $schema, $mode);
         $this->validateFormat($data, $schema);
         $this->validateIf($data, $schema);
         $this->validateThen($data, $schema);
@@ -113,21 +113,21 @@ class Validator
                 }
             case 'object':
                 {
-                    $this->validateProperties($data, $schema);
-                    $this->validateAdditionalProperties($data, $schema);
+                    $this->validateProperties($data, $schema, $mode);
+                    $this->validateAdditionalProperties($data, $schema, $mode);
                     $this->validateRequired($data, $schema);
-                    $this->validatePropertyNames($data, $schema);
+                    $this->validatePropertyNames($data, $schema, $mode);
                     $this->validateMinProperties($data, $schema);
                     $this->validateMaxProperties($data, $schema);
-                    $this->validateDependencies($data, $schema);
-                    $this->validatePatternProperties($data, $schema);
+                    $this->validateDependencies($data, $schema, $mode);
+                    $this->validatePatternProperties($data, $schema, $mode);
                     break;
                 }
             case 'array':
                 {
-                    $this->validateItems($data, $schema);
-                    $this->validateContains($data, $schema);
-                    $this->validateAdditionalItems($data, $schema);
+                    $this->validateItems($data, $schema, $mode);
+                    $this->validateContains($data, $schema, $mode);
+                    $this->validateAdditionalItems($data, $schema, $mode);
                     $this->validateMinItems($data, $schema);
                     $this->validateMaxItems($data, $schema);
                     $this->validateUniqueItems($data, $schema);
@@ -142,10 +142,10 @@ class Validator
      * Validate type & cast the data
      * @param $data
      * @param Schema $schema
-     * @param bool $cast
+     * @param int $mode
      * @throws ValidationException
      */
-    protected function validateType(&$data, Schema $schema, $cast = false): void
+    protected function validateType(&$data, Schema $schema, int $mode = 0): void
     {
         // When there is no type the validation will allow everything
         if (!property_exists($schema->storage(), 'type') || count($schema->storage()->type) === 0) {
@@ -158,7 +158,8 @@ class Validator
         }
 
         // Cast only if there is one type
-        if ($cast && count($schema->storage()->type) === 1) {
+        $doCast = ($mode & self::MODE_CAST) === self::MODE_CAST;
+        if ($doCast && count($schema->storage()->type) === 1) {
             $castTo = $schema->storage()->type[0];
 
             $data = call_user_func_array(__NAMESPACE__ . '\\Cast::' . $castTo, [$data]);
@@ -659,11 +660,11 @@ class Validator
      * Validate properties
      * @param object $data
      * @param Schema $schema
-     * @param bool $additionalsDefault
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateProperties(object &$data, Schema $schema, $additionalsDefault = true): void
+    protected function validateProperties(object &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'properties')) {
@@ -671,6 +672,7 @@ class Validator
         }
 
         // Get additional properties
+        $additionalsDefault = true;
         $additionalProperties = $additionalsDefault;
 
         if (property_exists($schema->storage(), 'additionalProperties')) {
@@ -687,7 +689,7 @@ class Validator
         foreach ($data as $key => $propertyData) {
             // Validate mapped properties
             if (property_exists($schema->storage()->properties, $key)) {
-                $this->validate($propertyData, $schema->storage()->properties->{$key});
+                $data->{$key} = $this->validate($propertyData, $schema->storage()->properties->{$key}, $mode);
             } elseif (!$additionalProperties) {
                 // If the property matches patternProperties then its not an additional property
                 foreach ($patternProperties as $pattern) {
@@ -710,10 +712,11 @@ class Validator
      * Validate additional properties
      * @param object $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateAdditionalProperties(object &$data, Schema $schema): void
+    protected function validateAdditionalProperties(object &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'additionalProperties')) {
@@ -747,7 +750,7 @@ class Validator
             }
 
             // Validate the additional property
-            $this->validate($propertyData, $schema->storage()->additionalProperties);
+            $data->{$key} = $this->validate($propertyData, $schema->storage()->additionalProperties, $mode);
         }
     }
 
@@ -780,10 +783,11 @@ class Validator
      * Validate property names
      * @param object $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validatePropertyNames(object &$data, Schema $schema): void
+    protected function validatePropertyNames(object &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'propertyNames')) {
@@ -791,7 +795,7 @@ class Validator
         }
 
         foreach ($data as $dataKey => $dataValue) {
-            $data->{$dataKey} = $this->validate($dataKey, $schema->storage()->propertyNames);
+            $this->validate($dataKey, $schema->storage()->propertyNames, $mode);
         }
     }
 
@@ -847,10 +851,11 @@ class Validator
      * Validate dependencies
      * @param object $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateDependencies(object &$data, Schema $schema): void
+    protected function validateDependencies(object &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'dependencies')) {
@@ -861,7 +866,7 @@ class Validator
             /* @var $dependencySchema Schema */
 
             if (property_exists($schema->storage()->dependencies, $key)) {
-                $this->validate($data, $schema->storage()->dependencies->{$key});
+                $this->validate($data, $schema->storage()->dependencies->{$key}, $mode);
             }
         }
     }
@@ -870,10 +875,11 @@ class Validator
      * Validate pattern properties
      * @param object $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validatePatternProperties(object &$data, Schema $schema): void
+    protected function validatePatternProperties(object &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'patternProperties')) {
@@ -897,7 +903,7 @@ class Validator
 
                 // Check for pattern
                 if (preg_match('/' . $pattern . '/', $dataKey)) {
-                    $data->{$dataKey} = $this->validate($dataValue, $propertySchema);
+                    $data->{$dataKey} = $this->validate($dataValue, $propertySchema, $mode);
                 }
             }
         }
@@ -907,11 +913,11 @@ class Validator
      * Validate items
      * @param array $data
      * @param Schema $schema
-     * @param bool $additionalsDefault
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateItems(array &$data, Schema $schema, $additionalsDefault = true): void
+    protected function validateItems(array &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'items')) {
@@ -920,6 +926,7 @@ class Validator
 
         // Get additional items
         $tupleValidation = is_array($schema->storage()->items);
+        $additionalsDefault = true;
         $additionalItems = $additionalsDefault;
 
         if (property_exists($schema->storage(), 'additionalItems')) {
@@ -931,7 +938,7 @@ class Validator
             // Tuple validation will check each item by mapped key
             if ($tupleValidation) {
                 if (array_key_exists($key, $schema->storage()->items)) {
-                    $this->validate($item, $schema->storage()->items[$key]);
+                    $data[$key] = $this->validate($item, $schema->storage()->items[$key], $mode);
                 } elseif (!$additionalItems) {
                     // If additional items are not allowed the will fail if there is an extra items
                     throw new ValidationException(sprintf(
@@ -942,7 +949,7 @@ class Validator
                 }
             } else {
                 // Single schema validation will check each item
-                $this->validate($item, $schema->storage()->items);
+                $data[$key] = $this->validate($item, $schema->storage()->items, $mode);
             }
         }
     }
@@ -951,10 +958,11 @@ class Validator
      * Validate contains
      * @param array $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateContains(array &$data, Schema $schema): void
+    protected function validateContains(array &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'contains')) {
@@ -962,9 +970,9 @@ class Validator
         }
 
         // Check for single match
-        foreach ($data as $item) {
+        foreach ($data as $key => $item) {
             try {
-                $this->validate($item, $schema->storage()->contains);
+                $data[$key] = $this->validate($item, $schema->storage()->contains, $mode);
                 return;
             } catch (ValidationException $e) {
                 // Do nothing
@@ -978,10 +986,11 @@ class Validator
      * Validate additional items
      * @param array $data
      * @param Schema $schema
+     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */
-    protected function validateAdditionalItems(array &$data, Schema $schema): void
+    protected function validateAdditionalItems(array &$data, Schema $schema, int $mode = 0): void
     {
         // Check exists
         if (!property_exists($schema->storage(), 'additionalItems')) {
@@ -1007,7 +1016,7 @@ class Validator
         // Check additional items
         $dataLength = count($data);
         for ($i = $currentItemsEnd; $i < $dataLength; $i++) {
-            $this->validate($data[$i], $schema->storage()->additionalItems);
+            $data[$i] = $this->validate($data[$i], $schema->storage()->additionalItems, $mode);
         }
     }
 
