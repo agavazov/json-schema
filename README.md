@@ -20,9 +20,14 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 - Clean code
 - Well documented
 
-## What remains to be done
+## What remains to be done `@todo`
+- Complete MODE_REMOVE_ADDITIONALS
+- Complete MODE_APPLY_DEFAULTS
+- Complete: default, definitions, allOf, anyOf, oneOf, not, if/then/else
+- Add versions for composer
+- Add develop branch & start using git-flow 
 - Grammatically correct comments and exceptions
-- Complete: ref, refRemote, allOf, anyOf, oneOf, not, default, definitions, if/then/else
+- Complete: ref, refRemote (it will be created static helper function which will be used from OpenAPI too)
 - Add phpunit
 
 ## Installation
