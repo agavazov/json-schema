@@ -1,5 +1,5 @@
 {
-  "name": "front-layer/json-schema",
+  "name": "frontlayer/json-schema",
   "description": "JSON Schema Validator",
   "version": "0.1",
   "autoload": {
