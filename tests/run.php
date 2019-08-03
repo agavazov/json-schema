@@ -261,29 +261,7 @@ class Tests
         $exception = null;
 
         try {
-            $data = '';
-
-            if (is_object($schema)) {
-                if (property_exists($schema, 'type')) {
-                    if (is_array($schema->type)) {
-                        $setType = $schema->type[0];
-                    } else {
-                        $setType = $schema->type;
-                    }
-
-                    if ($setType === 'number') {
-                        $setType = 'integer';
-                    }
-
-                    if (gettype($setType) !== 'string') {
-                        $setType = 'string';
-                    }
-
-                    settype($data, $setType);
-                }
-            }
-
-            $this->validator->validate($data, $schema);
+            $this->validator->validate('', $schema);
             $testResult = true;
         } catch (\FrontLayer\JsonSchema\SchemaException $exception) {
             $testResult = false;
