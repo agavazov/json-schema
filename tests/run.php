@@ -11,6 +11,8 @@ class Tests
     const SHOW_SUCCESS = 2;
     const SHOW_FAIL = 3;
 
+    protected $exitCode = 0;
+
     /**
      * Validator instance
      * @var \FrontLayer\JsonSchema\Validator
@@ -163,6 +165,8 @@ class Tests
                 }
             }
         }
+
+        exit($this->exitCode);
     }
 
     /**
@@ -285,6 +289,7 @@ class Tests
         }
 
         if (!$success) {
+            $this->exitCode = 1;
             print '<pre style="color: red;">' . $log . '</pre>';
         } else {
             print '<pre style="color: #a3d39b;">' . $log . '</pre>';
@@ -293,8 +298,8 @@ class Tests
 }
 
 $test = new Tests();
-$test->addCollection('./data', false);
-$test->addCollection('./schema', true);
+$test->addCollection(__DIR__ . '/data', false);
+$test->addCollection(__DIR__ . '/schema', true);
 
 $test->showOnly(Tests::SHOW_FAIL);
 
