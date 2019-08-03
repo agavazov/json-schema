@@ -265,8 +265,21 @@ class Tests
 
             if (is_object($schema)) {
                 if (property_exists($schema, 'type')) {
-                    $setType = $schema->type === 'number' ? 'integer' : $schema->type;
-                    @settype($data, $setType);
+                    if (is_array($schema->type)) {
+                        $setType = $schema->type[0];
+                    } else {
+                        $setType = $schema->type;
+                    }
+
+                    if ($setType === 'number') {
+                        $setType = 'integer';
+                    }
+
+                    if (gettype($setType) !== 'string') {
+                        $setType = 'string';
+                    }
+
+                    settype($data, $setType);
                 }
             }
 
