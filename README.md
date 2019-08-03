@@ -131,6 +131,18 @@ try {
 print 'SUCCESS';
 ```
 
+## Validation modes
+| Flag | Description |
+|------|-------------|
+| `Validator::MODE_CAST` | Cast the data to the specific format |
+| `Validator::MODE_REMOVE_ADDITIONALS` | Remove additional properties & additional items if they are not set to TRUE |
+| `Validator::MODE_APPLY_DEFAULTS` | Apply default values from the schema to the data |
+
+You can combine multiple flags with the bitwise operator `^`
+```php
+$validator->validate($data, $schema, Validator::MODE_CAST ^ Validator::MODE_REMOVE_ADDITIONALS ^ Validator::MODE_APPLY_DEFAULTS)
+```
+
 ## Test the project with more than 750 tests
 
 ```bash

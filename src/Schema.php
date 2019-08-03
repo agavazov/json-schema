@@ -4,15 +4,29 @@ namespace FrontLayer\JsonSchema;
 
 class Schema
 {
+    /**
+     * Storage of class schema
+     * @var object|bool
+     */
     protected $storage;
 
+    /**
+     * Map of registered formats
+     * @var object|null
+     */
     protected $formatsMap = null;
 
-    protected $path;
-
+    /**
+     * Current schema formats (determined by the types specified in the scheme or from $formatsMap)
+     * @var array|null
+     */
     protected $mainType = null;
 
-    protected $additionalsDefault = true;
+    /**
+     * Current instance path
+     * @var string
+     */
+    protected $path;
 
     /**
      * Schema constructor.

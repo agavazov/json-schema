@@ -5,11 +5,30 @@ namespace FrontLayer\JsonSchema;
 
 class Validator
 {
+    /**
+     * Cast the data to the specific format
+     */
     const MODE_CAST = 1;
-    const MODE_DISALLOW_ADDITIONALS_BY_DEFAULT = 2; // @todo
 
+    /**
+     * Remove additional properties & additional items if they are not set to TRUE
+     */
+    const MODE_REMOVE_ADDITIONALS = 2; // @todo
+
+    /**
+     * Apply default values from the schema to the data
+     */
+    const MODE_APPLY_DEFAULTS = 4; // @todo
+
+    /**
+     * Registered formats (with the type and callable validator)
+     * @var object
+     */
     protected $formats;
 
+    /**
+     * Validator constructor
+     */
     public function __construct()
     {
         $this->formats = (object)[]; // @todo move it to class body when PHP is ready for this syntax
