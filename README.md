@@ -23,6 +23,7 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 ## What remains to be done `@todo`
 - Complete `MODE_REMOVE_ADDITIONALS`
 - Complete `MODE_APPLY_DEFAULTS`
+- Complete `MODE_DISALLOW_IGNORES`
 - Complete: `default`, `definitions`, `allOf`, `anyOf`, `oneOf`, `not`, `if/then/else`
 - Add develop branch & start using Git-Flow 
 - Complete: `ref`, `refRemote` (it will be created static helper function which will be used from OpenAPI too)
@@ -157,6 +158,7 @@ print 'SUCCESS';
 | `Validator::MODE_CAST` | Cast the data to the specific format |
 | `Validator::MODE_REMOVE_ADDITIONALS` | Remove additional properties & additional items if they are not set to TRUE |
 | `Validator::MODE_APPLY_DEFAULTS` | Apply default values from the schema to the data |
+| `Validator::MODE_DISALLOW_IGNORES` | Throws error when different type is provided |
 
 You can combine multiple flags with the bitwise operator `^`
 ```php
