@@ -42,12 +42,18 @@ class Schema
             return;
         }
 
-        // Store current schema
-        $this->schema = $schema;
-        $this->references->{$this->getPath()} = $this;
-
         // Get schema type
-        $schemaType = gettype($this->schema);
+        $schemaType = gettype($schema);
+
+        // Store current schema
+        if ($references === null && $schemaType === 'object') {
+            // The easiest way to cast all associative arrays to objects and to clone the 1st level schema
+            $this->schema = json_decode(json_encode($schema));
+        } else {
+            $this->schema = $schema;
+        }
+
+        $this->references->{$this->getPath()} = $this;
 
         // Check for valid property type
         if ($schemaType !== 'object' && $schemaType !== 'boolean') {

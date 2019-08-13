@@ -163,18 +163,15 @@ class Tests
 
                 // Schema test
                 if (!$testData) {
-                    $schema = json_decode(json_encode($content->schema));
-                    $this->testSchema($content->valid, $schema, $collection->file, $content->description);
+                    $this->testSchema($content->valid, $content->schema, $collection->file, $content->description);
                 }
 
                 // Data test
                 if ($testData) {
-                    $schema = json_decode(json_encode($content->schema));
-                    $this->testSchema(true, $schema, $collection->file, $content->description);
+                    $this->testSchema(true, $content->schema, $collection->file, $content->description);
 
                     foreach ($content->tests as $test) {
-                        $schema = json_decode(json_encode($content->schema));
-                        $this->testData($test, $schema, $collection->file, $content->description . '::' . $test->description);
+                        $this->testData($test, $content->schema, $collection->file, $content->description . '::' . $test->description);
                     }
                 }
             }
