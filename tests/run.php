@@ -334,11 +334,8 @@ $test->addCollection(__DIR__ . '/schema', true);
 
 $test->showOnly(Tests::SHOW_FAIL);
 
-// @todo this must be fine - delete it and fix it
-$test->addFilter('all items match schema', Tests::FILTER_EXCLUDE);
-
-// @todo "pseudo-arrays" are arrays or not?
-$test->addFilter('JavaScript pseudo-array is valid', Tests::FILTER_EXCLUDE);
+// @todo fix this
+$test->addFilter('additionalProperties should not look in applicators', Tests::FILTER_EXCLUDE);
 
 // @todo so is patternProperty with high priority or not... or what means this test
 $test->addFilter('properties, patternProperties, additionalProperties interaction::patternProperty invalidates property', Tests::FILTER_EXCLUDE);

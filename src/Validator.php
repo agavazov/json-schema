@@ -93,9 +93,6 @@ class Validator
             }
         }
 
-        // Check for pseudo arrays
-        $data = Helper::transformPseudoArrays($data);
-
         // Validate
         $this->validateType($data, $schema);
         $this->validateFormat($data, $schema);

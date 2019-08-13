@@ -69,7 +69,7 @@ class Schema
 
             // Check for empty empty object. Then will make it "true"
             if ($schemaCount === 0) {
-                $this->references->{$this->getPath()} = true;
+                $this->schema = true;
                 $schemaType = 'boolean';
             }
         }
