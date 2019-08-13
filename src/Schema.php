@@ -4,20 +4,22 @@ namespace FrontLayer\JsonSchema;
 
 class Schema
 {
-    /**
-     * Storage of class schema
-     * @var object|bool
-     */
-    protected $storage;
+    protected $schema;
 
     /**
-     * Map of registered formats
-     * @var object|null
+     * Storage with all paths
+     * @var object
      */
-    protected $formatsMap = null;
+    protected $references;
 
     /**
-     * Current schema formats (determined by the types specified in the scheme or from $formatsMap)
+     * Schema formats
+     * @var Formats|null
+     */
+    protected $formats;
+
+    /**
+     * Current schema type (determined by the types specified in the scheme or from $formats)
      * @var string|null
      */
     protected $mainType = null;
@@ -31,53 +33,55 @@ class Schema
     /**
      * Schema constructor.
      * @param object|bool $schema
-     * @param object|null $formatsMap
+     * @param Formats|null $formats
      * @param string|null $path
+     * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, ?object $formatsMap = null, string $path = null)
+    public function __construct($schema, Formats $formats = null, string $path = '#/', object $references = null)
     {
-        $this->storage = $schema;
-        $this->formatsMap = $formatsMap;
+        // Register formats
+        $this->formats = $formats;
 
         // Set path
-        $this->path = $path ?: 'schema::/';
+        $this->path = $path;
 
-        // Make extends
-        $this->storage = $this->extend($this->storage);
+        // Register current schema
+        $this->references = $references ?: (object)[];
+
+        // Break if there is registered path in the storage
+        if (isset($this->references->{$this->path})) {
+            return;
+        }
+
+        // Store current schema
+        $this->schema = $schema;
+        $this->references->{$this->getPath()} = $this;
 
         // Get schema type
-        $schemaType = gettype($this->storage);
+        $schemaType = gettype($this->schema);
 
         // Check for valid property type
         if ($schemaType !== 'object' && $schemaType !== 'boolean') {
             throw new SchemaException(sprintf(
                 'You have "schema" which value is not a "object" or "boolean" but it is "%s" (%s)',
-                gettype($this->storage),
-                $this->getPath()
-            ));
-        }
-
-        // Check is already transformed
-        if ($this->storage instanceof Schema) {
-            throw new SchemaException(sprintf(
-                'This schema is already transformed with Schema class (%s)',
+                gettype($this->schema),
                 $this->getPath()
             ));
         }
 
         // If the schema is empty
         if ($schemaType === 'object') {
-            $storageCount = count((array)$this->storage);
+            $schemaCount = count((array)$this->schema);
 
-            if ($storageCount === 1 && property_exists($this->storage, 'additionalItems') && $this->storage->additionalItems === false) {
-                unset($this->storage->additionalItems);
-                $storageCount--;
+            if ($schemaCount === 1 && property_exists($this->schema, 'additionalItems') && $this->schema->additionalItems === false) {
+                unset($this->schema->additionalItems);
+                $schemaCount--;
             }
 
             // Check for empty empty object. Then will make it "true"
-            if ($storageCount === 0) {
-                $this->storage = true;
+            if ($schemaCount === 0) {
+                $this->references->{$this->getPath()} = true;
                 $schemaType = 'boolean';
             }
         }
@@ -90,6 +94,7 @@ class Schema
         // Check each attribute
         $this->processType();
         $this->processFormat();
+        $this->processDefinitions();
         $this->processIf();
         $this->processThen();
         $this->processElse();
@@ -126,73 +131,29 @@ class Schema
     }
 
     /**
-     * Make references extends
-     * @param $schema
-     * @param int $depthLevel
-     * @return bool|object
-     * @throws SchemaException
-     */
-    protected function extend($schema, int $depthLevel = 0)
-    {
-        $maxDepthLevel = 100;
-        $mainType = gettype($schema);
-
-        if ($mainType !== 'object' && $mainType !== 'array') {
-            return $schema;
-        }
-
-        // Check recursion
-        if ($depthLevel >= $maxDepthLevel) {
-            throw new SchemaException(sprintf(
-                'Reached more than "%d" recursions. Please check your code (%s)',
-                $maxDepthLevel,
-                $this->getPath()
-            ));
-        }
-
-        // Direct extend with array reduce
-        if ($mainType === 'object' && property_exists($schema, '$ref') && is_string($schema->{'$ref'})) {
-            if ($schema->{'$ref'} === '#') {
-                $rs = $this->storage;
-            } else {
-                $extendPath = explode('/', substr($schema->{'$ref'}, 2));
-
-                $rs = $this->storage;
-                foreach ($extendPath as $path) {
-                    if (!is_object($rs) || !property_exists($rs, $path)) {
-                        throw new SchemaException(sprintf(
-                            'Can`t extend path "%s" (%s)',
-                            $schema->{'$ref'},
-                            $this->getPath()
-                        ));
-                    }
-
-                    $rs = $rs->{$path};
-                }
-            }
-
-            return $rs;
-        }
-
-        // Check for extend object
-        foreach ($schema as $key => $value) {
-            if ($mainType === 'object') {
-                $schema->{$key} = $this->extend($value, $depthLevel + 1);
-            } elseif ($mainType === 'array') {
-                $schema[$key] = $this->extend($value, $depthLevel + 1);
-            }
-        }
-
-        return $schema;
-    }
-
-    /**
      * Return current schema structure
      * @return object|bool
      */
-    public function storage()
+    public function getSchema()
     {
-        return $this->storage;
+        if (is_object($this->schema) && property_exists($this->schema, '$ref')) {
+            $ref = $this->schema->{'$ref'};
+
+            if ($ref === '#') {
+                $ref = '#/';
+            }
+
+//            var_dump($ref);
+//            var_dump($this->references->{$ref}->getSchema());
+//            die();
+            if (count(array_keys((array)$this->references)) === 1) {
+                //var_dump(array_keys((array)$this->references));
+                //var_dump(debug_backtrace());
+            }
+            return $this->references->{$ref}->getSchema();
+        }
+
+        return $this->schema;
     }
 
     /**
@@ -223,28 +184,56 @@ class Schema
     }
 
     /**
+     * Transform jsonSchema to Schema object
+     * @param bool|object ...$nesting
+     * @throws SchemaException
+     */
+    protected function transform(... $nesting): void
+    {
+        $schema = $this->schema;
+
+        foreach ($nesting as $path) {
+            if (is_array($schema)) {
+                $schema = &$schema[$path];
+            } else {
+                $schema = &$schema->{$path};
+            }
+        }
+
+        // Build new path
+        $newPath = $this->getPath();
+        if (substr($newPath, -1) !== '/') {
+            $newPath .= '/';
+        }
+        $newPath .= implode('/', $nesting);
+
+        // Create (sub-)schema object
+        $schema = new Schema($schema, $this->formats, $newPath, $this->references);
+    }
+
+    /**
      * Check type property for appropriate format and for mismatch between properties and types
      * @throws SchemaException
      */
     protected function processType(): void
     {
         // Register type property
-        if (!property_exists($this->storage, 'type')) {
-            $this->storage->type = [];
+        if (!property_exists($this->schema, 'type')) {
+            $this->schema->type = [];
         }
 
         // Make schema type to be array by default
-        if (!is_array($this->storage->type)) {
-            $this->storage->type = [$this->storage->type];
+        if (!is_array($this->schema->type)) {
+            $this->schema->type = [$this->schema->type];
         }
 
         // If the schema type is null, then only null will be allowed as data
-        if (in_array(null, $this->storage->type, true)) {
-            $this->storage->const = null;
+        if (in_array(null, $this->schema->type, true)) {
+            $this->schema->const = null;
         }
 
         // Check that each item is with proper type
-        foreach ($this->storage->type as $key => $type) {
+        foreach ($this->schema->type as $key => $type) {
             // Check is it a string
             if (!is_string($type)) {
                 throw new SchemaException(sprintf(
@@ -291,12 +280,12 @@ class Schema
             'uniqueItems' => ['array'],
         ];
         foreach ($propertiesMap as $property => $expectedTypes) {
-            if (property_exists($this->storage, $property)) {
-                $typesCount = count($this->storage->type);
+            if (property_exists($this->schema, $property)) {
+                $typesCount = count($this->schema->type);
 
                 // When there is no any type then we will assign 1st match
                 if ($typesCount === 0) {
-                    $this->storage->type[] = $expectedTypes[0];
+                    $this->schema->type[] = $expectedTypes[0];
                     continue;
                 }
 
@@ -304,7 +293,7 @@ class Schema
                 $matches = 0;
 
                 foreach ($expectedTypes as $expectedType) {
-                    if (in_array($expectedType, $this->storage->type)) {
+                    if (in_array($expectedType, $this->schema->type)) {
                         $matches++;
                     }
                 }
@@ -314,7 +303,7 @@ class Schema
                         'The property "%s" is exclusive for type "%s" but there is another type/s "%s" (%s)',
                         $property,
                         implode('; ', $expectedTypes),
-                        implode('; ', $this->storage->type),
+                        implode('; ', $this->schema->type),
                         $this->getPath() . '/type'
                     ));
                 }
@@ -328,44 +317,74 @@ class Schema
      */
     protected function processFormat(): void
     {
-        if (!property_exists($this->storage, 'format') || $this->formatsMap === null || count((array)$this->formatsMap) === 0) {
+        if (!property_exists($this->schema, 'format') || $this->formats === null || count((array)$this->formats) === 0) {
             return;
         }
 
         // Check for valid property type
-        if (!is_string($this->storage->format)) {
+        if (!is_string($this->schema->format)) {
             throw new SchemaException(sprintf(
                 'You have "format" which value is not an string but it is "%s" (%s)',
-                gettype($this->storage->format),
+                gettype($this->schema->format),
                 $this->getPath() . '/format'
             ));
         }
 
         // Check for undefined format
-        if (!property_exists($this->formatsMap, $this->storage->format)) {
+        if (!property_exists($this->formats, $this->schema->format)) {
             throw new SchemaException(sprintf(
                 'Unknown format "%s" (%s)',
-                $this->storage->format,
+                $this->schema->format,
                 $this->getPath() . '/format'
             ));
         }
 
         // Check for mismatch between formats and types
-        $expectedType = $this->formatsMap->{$this->storage->format};
-        $typesCount = count($this->storage->type);
+        $expectedType = $this->formats->{$this->schema->format}->type;
+        $typesCount = count($this->schema->type);
 
         if ($typesCount === 0) {
-            $this->storage->type[] = $expectedType;
+            $this->schema->type[] = $expectedType;
         } else {
-            if ($typesCount !== 1 || !in_array($expectedType, $this->storage->type)) {
+            if ($typesCount !== 1 || !in_array($expectedType, $this->schema->type)) {
                 throw new SchemaException(sprintf(
                     'The format "%s" is exclusive for type "%s" but there is another type/s "%s" (%s)',
-                    $this->storage->format,
+                    $this->schema->format,
                     $expectedType,
-                    implode('; ', $this->storage->type),
+                    implode('; ', $this->schema->type),
                     $this->getPath() . '/type'
                 ));
             }
+        }
+    }
+
+    /**
+     * Check definitions property
+     * @throws SchemaException
+     */
+    protected function processDefinitions(): void
+    {
+        // Check exists
+        if (!property_exists($this->schema, 'definitions')) {
+            return;
+        }
+
+        // Check for valid property type
+        if (!is_object($this->schema->definitions)) {
+            throw new SchemaException(sprintf(
+                'You have "definitions" which value is not a "object" but it is "%s" (%s)',
+                gettype($this->schema->definitions),
+                $this->getPath() . '/definitions'
+            ));
+        }
+
+        foreach ($this->schema->definitions as $key => $value) {
+            if ($value instanceof Schema) {
+                continue;
+            }
+
+            // Transform to schema
+            $this->transform('definitions', $key);
         }
     }
 
@@ -376,13 +395,17 @@ class Schema
     protected function processIf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'if') || $this->storage->if instanceof Schema) {
+        if (!property_exists($this->schema, 'if')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->if instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/if';
-        $this->storage->if = new Schema($this->storage->if, $this->formatsMap, $newPath);
+        $this->transform('if');
     }
 
     /**
@@ -392,13 +415,17 @@ class Schema
     protected function processThen(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'then') || $this->storage->then instanceof Schema) {
+        if (!property_exists($this->schema, 'then')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->then instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/then';
-        $this->storage->then = new Schema($this->storage->then, $this->formatsMap, $newPath);
+        $this->transform('then');
     }
 
     /**
@@ -408,13 +435,17 @@ class Schema
     protected function processElse(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'else') || $this->storage->else instanceof Schema) {
+        if (!property_exists($this->schema, 'else')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->else instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/else';
-        $this->storage->else = new Schema($this->storage->else, $this->formatsMap, $newPath);
+        $this->transform('else');
     }
 
     /**
@@ -423,7 +454,7 @@ class Schema
     protected function processConst(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'const')) {
+        if (!property_exists($this->schema, 'const')) {
             return;
         }
 
@@ -437,15 +468,15 @@ class Schema
     protected function processEnum(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'enum')) {
+        if (!property_exists($this->schema, 'enum')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_array($this->storage->enum)) {
+        if (!is_array($this->schema->enum)) {
             throw new SchemaException(sprintf(
                 'You have "enum" which value is not an "array" but it is "%s" (%s)',
-                gettype($this->storage->enum),
+                gettype($this->schema->enum),
                 $this->getPath() . '/enum'
             ));
         }
@@ -458,13 +489,17 @@ class Schema
     protected function processAllOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'allOf') || $this->storage->allOf instanceof Schema) {
+        if (!property_exists($this->schema, 'allOf')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->allOf instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/allOf';
-        $this->storage->allOf = new Schema($this->storage->allOf, $this->formatsMap, $newPath);
+        $this->transform('allOf');
     }
 
     /**
@@ -474,13 +509,17 @@ class Schema
     protected function processAnyOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'anyOf') || $this->storage->anyOf instanceof Schema) {
+        if (!property_exists($this->schema, 'anyOf')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->anyOf instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/anyOf';
-        $this->storage->anyOf = new Schema($this->storage->anyOf, $this->formatsMap, $newPath);
+        $this->transform('anyOf');
     }
 
     /**
@@ -490,13 +529,17 @@ class Schema
     protected function processOneOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'oneOf') || $this->storage->oneOf instanceof Schema) {
+        if (!property_exists($this->schema, 'oneOf')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->oneOf instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/oneOf';
-        $this->storage->oneOf = new Schema($this->storage->oneOf, $this->formatsMap, $newPath);
+        $this->transform('oneOf');
     }
 
     /**
@@ -506,13 +549,17 @@ class Schema
     protected function processNot(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'not') || $this->storage->not instanceof Schema) {
+        if (!property_exists($this->schema, 'not')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->not instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/not';
-        $this->storage->not = new Schema($this->storage->not, $this->formatsMap, $newPath);
+        $this->transform('not');
     }
 
     /**
@@ -522,24 +569,24 @@ class Schema
     protected function processMinLength(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'minLength')) {
+        if (!property_exists($this->schema, 'minLength')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->minLength)) {
+        if (!is_integer($this->schema->minLength)) {
             throw new SchemaException(sprintf(
                 'You have "minLength" which value is not an integer but it is "%s" (%s)',
-                gettype($this->storage->minLength),
+                gettype($this->schema->minLength),
                 $this->getPath() . '/minLength'
             ));
         }
 
         // Check positive value
-        if ($this->storage->minLength < 0) {
+        if ($this->schema->minLength < 0) {
             throw new SchemaException(sprintf(
                 '"minLength" must be positive integer, you have "%s" (%s)',
-                $this->storage->minLength,
+                $this->schema->minLength,
                 $this->getPath() . '/minLength'
             ));
         }
@@ -552,35 +599,35 @@ class Schema
     protected function processMaxLength(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'maxLength')) {
+        if (!property_exists($this->schema, 'maxLength')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->maxLength)) {
+        if (!is_integer($this->schema->maxLength)) {
             throw new SchemaException(sprintf(
                 'You have "maxLength" which value is not an integer but it is "%s" (%s)',
-                gettype($this->storage->maxLength),
+                gettype($this->schema->maxLength),
                 $this->getPath() . '/maxLength'
             ));
         }
 
         // Check positive value
-        if ($this->storage->maxLength < 0) {
+        if ($this->schema->maxLength < 0) {
             throw new SchemaException(sprintf(
                 '"maxLength" must be positive integer, you have "%s" (%s)',
-                $this->storage->maxLength,
+                $this->schema->maxLength,
                 $this->getPath() . '/maxLength'
             ));
         }
 
         // Check is maxLength lower than minLength
-        if (property_exists($this->storage, 'minLength')) {
-            if ($this->storage->maxLength < $this->storage->minLength) {
+        if (property_exists($this->schema, 'minLength')) {
+            if ($this->schema->maxLength < $this->schema->minLength) {
                 throw new SchemaException(sprintf(
                     'You have "maxLength" with value "%d" which is lower than "minLength" with value "%d" (%s)',
-                    $this->storage->maxLength,
-                    $this->storage->minLength,
+                    $this->schema->maxLength,
+                    $this->schema->minLength,
                     $this->getPath() . '/maxLength'
                 ));
             }
@@ -594,21 +641,21 @@ class Schema
     protected function processPattern(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'pattern')) {
+        if (!property_exists($this->schema, 'pattern')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_string($this->storage->pattern)) {
+        if (!is_string($this->schema->pattern)) {
             throw new SchemaException(sprintf(
                 'You have "pattern" which value is not a "string" but it is "%s" (%s)',
-                gettype($this->storage->pattern),
+                gettype($this->schema->pattern),
                 $this->getPath() . '/pattern'
             ));
         }
 
         // Check for valid property value
-        if (!Check::regex($this->storage->pattern)) {
+        if (!Check::regex($this->schema->pattern)) {
             throw new SchemaException(sprintf(
                 'You have "pattern" which is not valid regex (%s)',
                 $this->getPath() . '/pattern'
@@ -623,15 +670,15 @@ class Schema
     protected function processContentEncoding(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'contentEncoding')) {
+        if (!property_exists($this->schema, 'contentEncoding')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_string($this->storage->contentEncoding)) {
+        if (!is_string($this->schema->contentEncoding)) {
             throw new SchemaException(sprintf(
                 'You have "contentEncoding" which value is not a "string" but it is "%s" (%s)',
-                gettype($this->storage->contentEncoding),
+                gettype($this->schema->contentEncoding),
                 $this->getPath() . '/contentEncoding'
             ));
         }
@@ -644,21 +691,21 @@ class Schema
     protected function processContentMediaType(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'contentMediaType')) {
+        if (!property_exists($this->schema, 'contentMediaType')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_string($this->storage->contentMediaType)) {
+        if (!is_string($this->schema->contentMediaType)) {
             throw new SchemaException(sprintf(
                 'You have "contentMediaType" which value is not a "string" but it is "%s" (%s)',
-                gettype($this->storage->contentMediaType),
+                gettype($this->schema->contentMediaType),
                 $this->getPath() . '/contentMediaType'
             ));
         }
 
         // Check for valid property value
-        if (strstr($this->storage->contentMediaType, '/') === false) {
+        if (strstr($this->schema->contentMediaType, '/') === false) {
             throw new SchemaException(sprintf(
                 'You have "contentMediaType" which is not well formatted. Slash "/" is missing (%s)',
                 $this->getPath() . '/contentMediaType'
@@ -673,15 +720,15 @@ class Schema
     protected function processMultipleOf(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'multipleOf')) {
+        if (!property_exists($this->schema, 'multipleOf')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_double($this->storage->multipleOf) && !is_integer($this->storage->multipleOf)) {
+        if (!is_double($this->schema->multipleOf) && !is_integer($this->schema->multipleOf)) {
             throw new SchemaException(sprintf(
                 'You have "multipleOf" which value is not a "numeric" but it is "%s" (%s)',
-                gettype($this->storage->multipleOf),
+                gettype($this->schema->multipleOf),
                 $this->getPath() . '/multipleOf'
             ));
         }
@@ -694,15 +741,15 @@ class Schema
     protected function processMinimum(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'minimum')) {
+        if (!property_exists($this->schema, 'minimum')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_double($this->storage->minimum) && !is_integer($this->storage->minimum)) {
+        if (!is_double($this->schema->minimum) && !is_integer($this->schema->minimum)) {
             throw new SchemaException(sprintf(
                 'You have "minimum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->storage->minimum),
+                gettype($this->schema->minimum),
                 $this->getPath() . '/minimum'
             ));
         }
@@ -715,27 +762,27 @@ class Schema
     protected function processMaximum(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'maximum')) {
+        if (!property_exists($this->schema, 'maximum')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_double($this->storage->maximum) && !is_integer($this->storage->maximum)) {
+        if (!is_double($this->schema->maximum) && !is_integer($this->schema->maximum)) {
             throw new SchemaException(sprintf(
                 'You have "maximum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->storage->maximum),
+                gettype($this->schema->maximum),
                 $this->getPath() . '/maximum'
             ));
         }
 
         // Minimum checks
-        if (property_exists($this->storage, 'minimum')) {
+        if (property_exists($this->schema, 'minimum')) {
             // Check is maximum lower than minimum
-            if ($this->storage->maximum < $this->storage->minimum) {
+            if ($this->schema->maximum < $this->schema->minimum) {
                 throw new SchemaException(sprintf(
                     'You have "maximum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
-                    $this->storage->maximum,
-                    $this->storage->minimum,
+                    $this->schema->maximum,
+                    $this->schema->minimum,
                     $this->getPath() . '/maximum'
                 ));
             }
@@ -749,27 +796,27 @@ class Schema
     protected function processExclusiveMinimum(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'exclusiveMinimum')) {
+        if (!property_exists($this->schema, 'exclusiveMinimum')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_double($this->storage->exclusiveMinimum) && !is_integer($this->storage->exclusiveMinimum)) {
+        if (!is_double($this->schema->exclusiveMinimum) && !is_integer($this->schema->exclusiveMinimum)) {
             throw new SchemaException(sprintf(
                 'You have "exclusiveMinimum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->storage->exclusiveMinimum),
+                gettype($this->schema->exclusiveMinimum),
                 $this->getPath() . '/exclusiveMinimum'
             ));
         }
 
         // Minimum checks
-        if (property_exists($this->storage, 'minimum')) {
+        if (property_exists($this->schema, 'minimum')) {
             // Check is exclusiveMinimum lower than minimum
-            if ($this->storage->exclusiveMinimum < $this->storage->minimum) {
+            if ($this->schema->exclusiveMinimum < $this->schema->minimum) {
                 throw new SchemaException(sprintf(
                     'You have "exclusiveMinimum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
-                    $this->storage->exclusiveMinimum,
-                    $this->storage->minimum,
+                    $this->schema->exclusiveMinimum,
+                    $this->schema->minimum,
                     $this->getPath() . '/exclusiveMinimum'
                 ));
             }
@@ -783,37 +830,37 @@ class Schema
     protected function processExclusiveMaximum(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'exclusiveMaximum')) {
+        if (!property_exists($this->schema, 'exclusiveMaximum')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_double($this->storage->exclusiveMaximum) && !is_integer($this->storage->exclusiveMaximum)) {
+        if (!is_double($this->schema->exclusiveMaximum) && !is_integer($this->schema->exclusiveMaximum)) {
             throw new SchemaException(sprintf(
                 'You have "exclusiveMaximum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->storage->exclusiveMaximum),
+                gettype($this->schema->exclusiveMaximum),
                 $this->getPath() . '/exclusiveMaximum'
             ));
         }
 
         // exclusiveMinimum checks
-        if (property_exists($this->storage, 'exclusiveMinimum')) {
+        if (property_exists($this->schema, 'exclusiveMinimum')) {
             // Check is exclusiveMaximum lower than exclusiveMinimum
-            if ($this->storage->exclusiveMaximum < $this->storage->exclusiveMinimum) {
+            if ($this->schema->exclusiveMaximum < $this->schema->exclusiveMinimum) {
                 throw new SchemaException(sprintf(
                     'You have "exclusiveMaximum" with value "%d" which is lower than "exclusiveMinimum" with value "%d" (%s)',
-                    $this->storage->exclusiveMaximum,
-                    $this->storage->exclusiveMinimum,
+                    $this->schema->exclusiveMaximum,
+                    $this->schema->exclusiveMinimum,
                     $this->getPath() . '/exclusiveMaximum'
                 ));
             }
 
             // Check is exclusiveMaximum equal to exclusiveMinimum
-            if ($this->storage->exclusiveMaximum == $this->storage->exclusiveMinimum) {
+            if ($this->schema->exclusiveMaximum == $this->schema->exclusiveMinimum) {
                 throw new SchemaException(sprintf(
                     'You have "exclusiveMaximum" with value "%d" which is equal to "exclusiveMinimum" with value "%d" (%s)',
-                    $this->storage->exclusiveMaximum,
-                    $this->storage->exclusiveMinimum,
+                    $this->schema->exclusiveMaximum,
+                    $this->schema->exclusiveMinimum,
                     $this->getPath() . '/exclusiveMaximum'
                 ));
             }
@@ -827,27 +874,26 @@ class Schema
     protected function processProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'properties')) {
+        if (!property_exists($this->schema, 'properties')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_object($this->storage->properties)) {
+        if (!is_object($this->schema->properties)) {
             throw new SchemaException(sprintf(
                 'You have "properties" which value is not a "object" but it is "%s" (%s)',
-                gettype($this->storage->properties),
+                gettype($this->schema->properties),
                 $this->getPath() . '/properties'
             ));
         }
 
-        foreach ($this->storage->properties as $key => $value) {
+        foreach ($this->schema->properties as $key => $value) {
             if ($value instanceof Schema) {
                 continue;
             }
 
             // Transform to schema
-            $newPath = $this->getPath() . '/properties/' . $key;
-            $this->storage->properties->{$key} = new Schema($value, $this->formatsMap, $newPath);
+            $this->transform('properties', $key);
         }
     }
 
@@ -858,13 +904,17 @@ class Schema
     protected function processAdditionalProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'additionalProperties') || $this->storage->additionalProperties instanceof Schema) {
+        if (!property_exists($this->schema, 'additionalProperties')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->additionalProperties instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/additionalProperties';
-        $this->storage->additionalProperties = new Schema($this->storage->additionalProperties, $this->formatsMap, $newPath);
+        $this->transform('additionalProperties');
     }
 
     /**
@@ -874,21 +924,21 @@ class Schema
     protected function processRequired(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'required')) {
+        if (!property_exists($this->schema, 'required')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_array($this->storage->required)) {
+        if (!is_array($this->schema->required)) {
             throw new SchemaException(sprintf(
                 'You have "required" which value is not a "array" but it is "%s" (%s)',
-                gettype($this->storage->required),
+                gettype($this->schema->required),
                 $this->getPath() . '/required'
             ));
         }
 
         // Check that each item is with proper type
-        foreach ($this->storage->required as $required) {
+        foreach ($this->schema->required as $required) {
             if (!is_string($required)) {
                 throw new SchemaException(sprintf(
                     'You have defined required property which is not a string value (%s)',
@@ -905,13 +955,17 @@ class Schema
     protected function processPropertyNames(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'propertyNames') || $this->storage->propertyNames instanceof Schema) {
+        if (!property_exists($this->schema, 'propertyNames')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->propertyNames instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/propertyNames';
-        $this->storage->propertyNames = new Schema($this->storage->propertyNames, $this->formatsMap, $newPath);
+        $this->transform('propertyNames');
     }
 
     /**
@@ -921,24 +975,24 @@ class Schema
     protected function processMinProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'minProperties')) {
+        if (!property_exists($this->schema, 'minProperties')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->minProperties)) {
+        if (!is_integer($this->schema->minProperties)) {
             throw new SchemaException(sprintf(
                 'You have "minProperties" which value is not a "integer" but it is "%s" (%s)',
-                gettype($this->storage->minProperties),
+                gettype($this->schema->minProperties),
                 $this->getPath() . '/minProperties'
             ));
         }
 
         // Check positive value
-        if ($this->storage->minProperties < 0) {
+        if ($this->schema->minProperties < 0) {
             throw new SchemaException(sprintf(
                 '"minProperties" must be positive integer, you have "%s" (%s)',
-                $this->storage->minProperties,
+                $this->schema->minProperties,
                 $this->getPath() . '/minProperties'
             ));
         }
@@ -951,35 +1005,35 @@ class Schema
     protected function processMaxProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'maxProperties')) {
+        if (!property_exists($this->schema, 'maxProperties')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->maxProperties)) {
+        if (!is_integer($this->schema->maxProperties)) {
             throw new SchemaException(sprintf(
                 'You have "maxProperties" which value is not a "integer" but it is "%s" (%s)',
-                gettype($this->storage->maxProperties),
+                gettype($this->schema->maxProperties),
                 $this->getPath() . '/maxProperties'
             ));
         }
 
         // Check positive value
-        if ($this->storage->maxProperties < 0) {
+        if ($this->schema->maxProperties < 0) {
             throw new SchemaException(sprintf(
                 '"maxProperties" must be positive integer, you have "%s" (%s)',
-                $this->storage->maxProperties,
+                $this->schema->maxProperties,
                 $this->getPath() . '/maxProperties'
             ));
         }
 
         // Check is maxProperties lower than minProperties
-        if (property_exists($this->storage, 'minProperties')) {
-            if ($this->storage->maxProperties < $this->storage->minProperties) {
+        if (property_exists($this->schema, 'minProperties')) {
+            if ($this->schema->maxProperties < $this->schema->minProperties) {
                 throw new SchemaException(sprintf(
                     'You have "maxProperties" with value "%d" which is lower than "minProperties" with value "%d" (%s)',
-                    $this->storage->maxProperties,
-                    $this->storage->minProperties,
+                    $this->schema->maxProperties,
+                    $this->schema->minProperties,
                     $this->getPath() . '/maxProperties'
                 ));
             }
@@ -993,21 +1047,21 @@ class Schema
     protected function processDependencies(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'dependencies')) {
+        if (!property_exists($this->schema, 'dependencies')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_object($this->storage->dependencies)) {
+        if (!is_object($this->schema->dependencies)) {
             throw new SchemaException(sprintf(
                 'You have "dependencies" which value is not an "object" but it is "%s" (%s)',
-                gettype($this->storage->dependencies),
+                gettype($this->schema->dependencies),
                 $this->getPath() . '/dependencies'
             ));
         }
 
         // Check the schema
-        foreach ($this->storage->dependencies as $dKey => $schema) {
+        foreach ($this->schema->dependencies as $dKey => $schema) {
             // If is already transformed to Schema
             if ($schema instanceof Schema) {
                 continue;
@@ -1020,13 +1074,13 @@ class Schema
                     if (!is_string($item)) {
                         throw new SchemaException(sprintf(
                             'You have defined dependency item which is not a string value (%s)',
-                            $this->getPath() . '/dependencies/[' . $sKey . ']'
+                            $this->getPath() . '/dependencies/' . $sKey
                         ));
                     }
                 }
 
                 // Normalize to schema
-                $this->storage->dependencies->{$dKey} = (object)[
+                $this->schema->dependencies->{$dKey} = (object)[
                     'type' => 'object',
                     'additionalProperties' => true,
                     'required' => $schema
@@ -1034,8 +1088,7 @@ class Schema
             }
 
             // Transform to schema
-            $newPath = $this->getPath() . '/dependencies/' . $dKey;
-            $this->storage->dependencies->{$dKey} = new Schema($this->storage->dependencies->{$dKey}, $this->formatsMap, $newPath);
+            $this->transform('dependencies', $dKey);
         }
     }
 
@@ -1046,21 +1099,21 @@ class Schema
     protected function processPatternProperties(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'patternProperties')) {
+        if (!property_exists($this->schema, 'patternProperties')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_object($this->storage->patternProperties)) {
+        if (!is_object($this->schema->patternProperties)) {
             throw new SchemaException(sprintf(
                 'You have "patternProperties" which value is not an "object" but it is "%s" (%s)',
-                gettype($this->storage->patternProperties),
+                gettype($this->schema->patternProperties),
                 $this->getPath() . '/patternProperties'
             ));
         }
 
         // Check the structure of patternProperties
-        foreach ($this->storage->patternProperties as $keyPattern => $schema) {
+        foreach ($this->schema->patternProperties as $keyPattern => $schema) {
             // If is already transformed to Schema
             if ($schema instanceof Schema) {
                 continue;
@@ -1076,8 +1129,7 @@ class Schema
             }
 
             // Transform to schema
-            $newPath = $this->getPath() . '/patternProperties/' . $keyPattern;
-            $this->storage->patternProperties->{$keyPattern} = new Schema($schema, $this->formatsMap, $newPath);
+            $this->transform('patternProperties', $keyPattern);
         }
     }
 
@@ -1088,43 +1140,41 @@ class Schema
     protected function processItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'items')) {
+        if (!property_exists($this->schema, 'items')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_array($this->storage->items) && !is_object($this->storage->items) && !is_bool($this->storage->items)) {
+        if (!is_array($this->schema->items) && !is_object($this->schema->items) && !is_bool($this->schema->items)) {
             throw new SchemaException(sprintf(
                 'You have "items" which value is not a "array", "object" or "boolean" but it is "%s" (%s)',
-                gettype($this->storage->items),
+                gettype($this->schema->items),
                 $this->getPath() . '/items'
             ));
         }
 
         // Validate multiple item schema
-        if (is_array($this->storage->items)) {
-            foreach ($this->storage->items as $key => $schema) {
+        if (is_array($this->schema->items)) {
+            foreach ($this->schema->items as $key => $schema) {
                 // If is already transformed to Schema
                 if ($schema instanceof Schema) {
                     return;
                 }
 
                 // Transform to schema
-                $newPath = $this->getPath() . '/items[' . $key . ']';
-                $this->storage->items[$key] = new Schema($schema, $this->formatsMap, $newPath);
+                $this->transform('items', $key);
             }
         }
 
         // Validate single item schema
-        if (is_object($this->storage->items) || is_bool($this->storage->items)) {
+        if (is_object($this->schema->items) || is_bool($this->schema->items)) {
             // If is already transformed to Schema
-            if ($this->storage->items instanceof Schema) {
+            if ($this->schema->items instanceof Schema) {
                 return;
             }
 
             // Transform to schema
-            $newPath = $this->getPath() . '/items';
-            $this->storage->items = new Schema($this->storage->items, $this->formatsMap, $newPath);
+            $this->transform('items');
         }
     }
 
@@ -1135,13 +1185,17 @@ class Schema
     protected function processContains(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'contains') || $this->storage->contains instanceof Schema) {
+        if (!property_exists($this->schema, 'contains')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->contains instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/contains';
-        $this->storage->contains = new Schema($this->storage->contains, $this->formatsMap, $newPath);
+        $this->transform('contains');
     }
 
     /**
@@ -1151,13 +1205,17 @@ class Schema
     protected function processAdditionalItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'additionalItems') || $this->storage->additionalItems instanceof Schema) {
+        if (!property_exists($this->schema, 'additionalItems')) {
+            return;
+        }
+
+        // If is already transformed to Schema
+        if ($this->schema->additionalItems instanceof Schema) {
             return;
         }
 
         // Transform to schema
-        $newPath = $this->getPath() . '/additionalItems';
-        $this->storage->additionalItems = new Schema($this->storage->additionalItems, $this->formatsMap, $newPath);
+        $this->transform('additionalItems');
     }
 
     /**
@@ -1167,24 +1225,24 @@ class Schema
     protected function processMinItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'minItems')) {
+        if (!property_exists($this->schema, 'minItems')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->minItems)) {
+        if (!is_integer($this->schema->minItems)) {
             throw new SchemaException(sprintf(
                 'You have "minItems" which value is not an integer but it is "%s" (%s)',
-                gettype($this->storage->minItems),
+                gettype($this->schema->minItems),
                 $this->getPath() . '/minItems'
             ));
         }
 
         // Check positive value
-        if ($this->storage->minItems < 0) {
+        if ($this->schema->minItems < 0) {
             throw new SchemaException(sprintf(
                 '"minItems" must be positive integer, you have "%s" (%s)',
-                $this->storage->minItems,
+                $this->schema->minItems,
                 $this->getPath() . '/minItems'
             ));
         }
@@ -1197,35 +1255,35 @@ class Schema
     protected function processMaxItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'maxItems')) {
+        if (!property_exists($this->schema, 'maxItems')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_integer($this->storage->maxItems)) {
+        if (!is_integer($this->schema->maxItems)) {
             throw new SchemaException(sprintf(
                 'You have "maxItems" which value is not an integer but it is "%s" (%s)',
-                gettype($this->storage->maxItems),
+                gettype($this->schema->maxItems),
                 $this->getPath() . '/maxItems'
             ));
         }
 
         // Check positive value
-        if ($this->storage->maxItems < 0) {
+        if ($this->schema->maxItems < 0) {
             throw new SchemaException(sprintf(
                 '"maxItems" must be positive integer, you have "%s" (%s)',
-                $this->storage->maxItems,
+                $this->schema->maxItems,
                 $this->getPath() . '/maxItems'
             ));
         }
 
         // Check is maxItems lower than minItems
-        if (property_exists($this->storage, 'minItems')) {
-            if ($this->storage->maxItems < $this->storage->minItems) {
+        if (property_exists($this->schema, 'minItems')) {
+            if ($this->schema->maxItems < $this->schema->minItems) {
                 throw new SchemaException(sprintf(
                     'You have "maxItems" with value "%d" which is lower than "minItems" with value "%d" (%s)',
-                    $this->storage->maxItems,
-                    $this->storage->minItems,
+                    $this->schema->maxItems,
+                    $this->schema->minItems,
                     $this->getPath() . '/maxItems'
                 ));
             }
@@ -1239,15 +1297,15 @@ class Schema
     protected function processUniqueItems(): void
     {
         // Check exists
-        if (!property_exists($this->storage, 'uniqueItems')) {
+        if (!property_exists($this->schema, 'uniqueItems')) {
             return;
         }
 
         // Check for valid property type
-        if (!is_bool($this->storage->uniqueItems)) {
+        if (!is_bool($this->schema->uniqueItems)) {
             throw new SchemaException(sprintf(
                 'You have "uniqueItems" which value is not a "boolean" but it is "%s" (%s)',
-                gettype($this->storage->uniqueItems),
+                gettype($this->schema->uniqueItems),
                 $this->getPath() . '/uniqueItems'
             ));
         }

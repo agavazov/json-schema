@@ -21,13 +21,13 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 - Well documented
 
 ## What remains to be done `@todo`
-- Complete MODE_REMOVE_ADDITIONALS
-- Complete MODE_APPLY_DEFAULTS
-- Complete: default, definitions, allOf, anyOf, oneOf, not, if/then/else
+- Complete `MODE_REMOVE_ADDITIONALS`
+- Complete `MODE_APPLY_DEFAULTS`
+- Complete: `default`, `definitions`, `allOf`, `anyOf`, `oneOf`, `not`, `if/then/else`
+- Add develop branch & start using Git-Flow 
+- Complete: `ref`, `refRemote` (it will be created static helper function which will be used from OpenAPI too)
 - Add versions for composer
-- Add develop branch & start using git-flow 
 - Grammatically correct comments and exceptions
-- Complete: ref, refRemote (it will be created static helper function which will be used from OpenAPI too)
 - Add phpunit
 
 ## Installation
@@ -49,10 +49,12 @@ $jsonSchema = '{
     "minimum": 10
 }';
 
-$validator = new \FrontLayer\JsonSchema\Validator();
+$formats = new \FrontLayer\JsonSchema\Formats();
+$schema = new \FrontLayer\JsonSchema\Schema(json_decode($jsonSchema), $formats);
+$validator = new \FrontLayer\JsonSchema\Validator($formats);
 
 try {
-    $validator->validate($data, json_decode($jsonSchema));
+    $validator->validate($data, $schema);
 } catch (\Exception $e) {
     print 'FAIL: ' . $e->getMessage();
     die(1);
@@ -92,13 +94,17 @@ $jsonSchema = (object)[
     ]
 ];
 
-$validator = new \FrontLayer\JsonSchema\Validator();
-$newData = $validator->validate($data, $jsonSchema, \FrontLayer\JsonSchema\Validator::MODE_CAST);
+$formats = new \FrontLayer\JsonSchema\Formats();
+$schema = new \FrontLayer\JsonSchema\Schema($jsonSchema, $formats);
+$validator = new \FrontLayer\JsonSchema\Validator($formats, \FrontLayer\JsonSchema\Validator::MODE_CAST);
+$newData = $validator->validate($data, $schema);
 var_dump($newData);
 ```
 
 ### Register Custom Format
 ```php
+use \FrontLayer\JsonSchema\Formats;
+use \FrontLayer\JsonSchema\Schema;
 use \FrontLayer\JsonSchema\Validator;
 use \FrontLayer\JsonSchema\ValidationException;
 use \FrontLayer\JsonSchema\SchemaException;
@@ -111,17 +117,26 @@ $jsonSchema = (object)[
     'format' => 'objectId'
 ];
 
-// Initialize validator
-$validator = new Validator();
+// Initialize formats & register custom format
+$formats = new Formats();
 
-// Register custom format
-$validator->registerFormat('objectId', 'string', function (string $input): bool {
+$formats->registerFormat('objectId', 'string', function (string $input): bool {
     return (bool)preg_match('/^[a-f\d]{24}$/i', $input);
 });
 
+// Initialize schema
+$schema = new Schema($jsonSchema);
+
+$formats->registerFormat('objectId', 'string', function (string $input): bool {
+    return (bool)preg_match('/^[a-f\d]{24}$/i', $input);
+});
+
+// Initialize validator
+$validator = new Validator($formats, Validator::MODE_CAST);
+
 // Validate and catch the problems
 try {
-    $validator->validate($data, $jsonSchema, Validator::MODE_CAST);
+    $validator->validate($data, $schema);
 } catch (ValidationException $e) {
     print 'Validation Problem: ' . $e->getMessage();
     die(1);

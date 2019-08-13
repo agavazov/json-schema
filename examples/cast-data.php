@@ -32,7 +32,8 @@ $jsonSchema = (object)[
     ]
 ];
 
-
-$validator = new \FrontLayer\JsonSchema\Validator();
-$newData = $validator->validate($data, $jsonSchema, \FrontLayer\JsonSchema\Validator::MODE_CAST);
+$formats = new \FrontLayer\JsonSchema\Formats();
+$schema = new \FrontLayer\JsonSchema\Schema($jsonSchema, $formats);
+$validator = new \FrontLayer\JsonSchema\Validator($formats, \FrontLayer\JsonSchema\Validator::MODE_CAST);
+$newData = $validator->validate($data, $schema);
 var_dump($newData);
