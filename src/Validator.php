@@ -414,7 +414,11 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate not
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateNot(&$data, Schema $schema): void
     {
@@ -423,7 +427,13 @@ class Validator
             return;
         }
 
-        // @todo ok
+        try {
+            $this->validate($data, $schema->getSchema()->not);
+        } catch (ValidationException $e) {
+            return;
+        }
+
+        throw new ValidationException('Validation was successful, but "not" condition requires the opposite');
     }
 
     /**
