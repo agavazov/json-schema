@@ -4,6 +4,10 @@ namespace FrontLayer\JsonSchema;
 
 class Schema
 {
+    /**
+     * Current object schema
+     * @var bool|object
+     */
     protected $schema;
 
     /**
@@ -11,18 +15,6 @@ class Schema
      * @var object
      */
     protected $references;
-
-    /**
-     * Schema formats
-     * @var Formats|null
-     */
-    protected $formats;
-
-    /**
-     * Current schema type (determined by the types specified in the scheme or from $formats)
-     * @var string|null
-     */
-    protected $mainType = null;
 
     /**
      * Current instance path
@@ -33,16 +25,12 @@ class Schema
     /**
      * Schema constructor.
      * @param object|bool $schema
-     * @param Formats|null $formats
      * @param string|null $path
      * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, Formats $formats = null, string $path = '#/', object $references = null)
+    public function __construct($schema, string $path = '#/', object $references = null)
     {
-        // Register formats
-        $this->formats = $formats;
-
         // Set path
         $this->path = $path;
 
@@ -143,13 +131,6 @@ class Schema
                 $ref = '#/';
             }
 
-//            var_dump($ref);
-//            var_dump($this->references->{$ref}->getSchema());
-//            die();
-            if (count(array_keys((array)$this->references)) === 1) {
-                //var_dump(array_keys((array)$this->references));
-                //var_dump(debug_backtrace());
-            }
             return $this->references->{$ref}->getSchema();
         }
 
@@ -163,24 +144,6 @@ class Schema
     public function getPath(): string
     {
         return $this->path;
-    }
-
-    /**
-     * Type property is array. After data is analyzed the we will set main type which matches one of the property types
-     * @param string $type
-     */
-    public function setMainType(string $type): void
-    {
-        $this->mainType = $type;
-    }
-
-    /**
-     * Return matched type
-     * @return string|null
-     */
-    public function getMainType(): ?string
-    {
-        return $this->mainType;
     }
 
     /**
@@ -208,7 +171,7 @@ class Schema
         $newPath .= implode('/', $nesting);
 
         // Create (sub-)schema object
-        $schema = new Schema($schema, $this->formats, $newPath, $this->references);
+        $schema = new Schema($schema, $newPath, $this->references);
     }
 
     /**
@@ -251,73 +214,15 @@ class Schema
                 ));
             }
         }
-
-        // Check for mismatch between properties and types
-        $propertiesMap = (object)[
-            'minLength' => ['string'],
-            'maxLength' => ['string'],
-            'pattern' => ['string'],
-            'contentMediaType' => ['string'],
-            'contentEncoding' => ['string'],
-            'multipleOf' => ['number', 'integer'],
-            'minimum' => ['number', 'integer'],
-            'exclusiveMinimum' => ['number', 'integer'],
-            'maximum' => ['number', 'integer'],
-            'exclusiveMaximum' => ['number', 'integer'],
-            'properties' => ['object'],
-            'additionalProperties' => ['object'],
-            'required' => ['object'],
-            'propertyNames' => ['object'],
-            'minProperties' => ['object'],
-            'maxProperties' => ['object'],
-            'dependencies' => ['object'],
-            'patternProperties' => ['object'],
-            'items' => ['array'],
-            'contains' => ['array'],
-            'additionalItems' => ['array'],
-            'minItems' => ['array'],
-            'maxItems' => ['array'],
-            'uniqueItems' => ['array'],
-        ];
-        foreach ($propertiesMap as $property => $expectedTypes) {
-            if (property_exists($this->schema, $property)) {
-                $typesCount = count($this->schema->type);
-
-                // When there is no any type then we will assign 1st match
-                if ($typesCount === 0) {
-                    $this->schema->type[] = $expectedTypes[0];
-                    continue;
-                }
-
-                // Check for mismatches - when type/s are different than $expectedTypes
-                $matches = 0;
-
-                foreach ($expectedTypes as $expectedType) {
-                    if (in_array($expectedType, $this->schema->type)) {
-                        $matches++;
-                    }
-                }
-
-                if ($typesCount > $matches) {
-                    throw new SchemaException(sprintf(
-                        'The property "%s" is exclusive for type "%s" but there is another type/s "%s" (%s)',
-                        $property,
-                        implode('; ', $expectedTypes),
-                        implode('; ', $this->schema->type),
-                        $this->getPath() . '/type'
-                    ));
-                }
-            }
-        }
     }
 
     /**
-     * Check format property and assign type to the schema if need
+     * Check format property
      * @throws SchemaException
      */
     protected function processFormat(): void
     {
-        if (!property_exists($this->schema, 'format') || $this->formats === null || count((array)$this->formats) === 0) {
+        if (!property_exists($this->schema, 'format')) {
             return;
         }
 
@@ -328,33 +233,6 @@ class Schema
                 gettype($this->schema->format),
                 $this->getPath() . '/format'
             ));
-        }
-
-        // Check for undefined format
-        if (!property_exists($this->formats, $this->schema->format)) {
-            throw new SchemaException(sprintf(
-                'Unknown format "%s" (%s)',
-                $this->schema->format,
-                $this->getPath() . '/format'
-            ));
-        }
-
-        // Check for mismatch between formats and types
-        $expectedType = $this->formats->{$this->schema->format}->type;
-        $typesCount = count($this->schema->type);
-
-        if ($typesCount === 0) {
-            $this->schema->type[] = $expectedType;
-        } else {
-            if ($typesCount !== 1 || !in_array($expectedType, $this->schema->type)) {
-                throw new SchemaException(sprintf(
-                    'The format "%s" is exclusive for type "%s" but there is another type/s "%s" (%s)',
-                    $this->schema->format,
-                    $expectedType,
-                    implode('; ', $this->schema->type),
-                    $this->getPath() . '/type'
-                ));
-            }
         }
     }
 

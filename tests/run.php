@@ -216,9 +216,8 @@ class Tests
         $exception = null;
 
         try {
-            $formats = new \FrontLayer\JsonSchema\Formats();
-            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema, $formats);
-            $validator = new \FrontLayer\JsonSchema\Validator($formats, $mode);
+            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema);
+            $validator = new \FrontLayer\JsonSchema\Validator($mode);
             $newData = $validator->validate($test->data, $schema);
             $testResult = true;
         } catch (\FrontLayer\JsonSchema\ValidationException $exception) {
@@ -259,9 +258,8 @@ class Tests
         $exception = null;
 
         try {
-            $formats = new \FrontLayer\JsonSchema\Formats();
-            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema, $formats);
-            $validator = new \FrontLayer\JsonSchema\Validator($formats);
+            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema);
+            $validator = new \FrontLayer\JsonSchema\Validator();
             $validator->validate('', $schema);
             $testResult = true;
         } catch (\FrontLayer\JsonSchema\SchemaException $exception) {
@@ -335,18 +333,6 @@ $test->addCollection(__DIR__ . '/data', false);
 $test->addCollection(__DIR__ . '/schema', true);
 
 $test->showOnly(Tests::SHOW_FAIL);
-
-// @todo - Check exactly where in the documentation we can pass different types (if it`s passable fix this and add extra FLAG for strict mode)
-{
-    $test->addFilter('ignores arrays', Tests::FILTER_EXCLUDE);
-    $test->addFilter('ignores non-arrays', Tests::FILTER_EXCLUDE);
-    $test->addFilter('ignores non-numbers', Tests::FILTER_EXCLUDE);
-    $test->addFilter('ignores strings', Tests::FILTER_EXCLUDE);
-    $test->addFilter('ignores non-strings', Tests::FILTER_EXCLUDE);
-    $test->addFilter('ignores other non-objects', Tests::FILTER_EXCLUDE);
-    $test->addFilter('contains keyword validation::not array is valid', Tests::FILTER_EXCLUDE);
-    $test->addFilter('empty array of dependencies::non-object is valid', Tests::FILTER_EXCLUDE);
-}
 
 // @todo this must be fine - delete it and fix it
 $test->addFilter('all items match schema', Tests::FILTER_EXCLUDE);

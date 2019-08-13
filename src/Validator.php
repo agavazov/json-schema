@@ -6,7 +6,7 @@ namespace FrontLayer\JsonSchema;
 class Validator
 {
     /**
-     * Cast the data to the specific format
+     * Cast the data to the specific type (if it is passable)
      */
     const MODE_CAST = 1;
 
@@ -21,30 +21,53 @@ class Validator
     const MODE_REMOVE_ADDITIONALS = 4; // @todo
 
     /**
-     * Throws error when different type is provided
-     */
-    const MODE_DISALLOW_IGNORES = 8; // @todo
-
-    /**
-     * @var Formats|null
+     * Registered formats
+     * @var object
      */
     protected $formats;
 
     /**
-     * Bitmask configuration
+     * Validator configuration
      * @var int
      */
     protected $mode;
 
     /**
      * Validator constructor.
-     * @param Formats|null $formats
      * @param int $mode
      */
-    public function __construct(Formats $formats = null, int $mode = 0)
+    public function __construct(int $mode = 0)
     {
-        $this->formats = $formats;
+        $this->formats = (object)[];
         $this->mode = $mode;
+
+        $this->registerFormat('date-time', __NAMESPACE__ . '\\Check::dateTime');
+        $this->registerFormat('time', __NAMESPACE__ . '\\Check::time');
+        $this->registerFormat('date', __NAMESPACE__ . '\\Check::date');
+        $this->registerFormat('email', __NAMESPACE__ . '\\Check::email');
+        $this->registerFormat('idn-email', __NAMESPACE__ . '\\Check::idnEmail');
+        $this->registerFormat('hostname', __NAMESPACE__ . '\\Check::hostname');
+        $this->registerFormat('idn-hostname', __NAMESPACE__ . '\\Check::idnHostname');
+        $this->registerFormat('ipv4', __NAMESPACE__ . '\\Check::ipv4');
+        $this->registerFormat('ipv6', __NAMESPACE__ . '\\Check::ipv6');
+        $this->registerFormat('uri', __NAMESPACE__ . '\\Check::uri');
+        $this->registerFormat('uri-reference', __NAMESPACE__ . '\\Check::uriReference');
+        $this->registerFormat('iri', __NAMESPACE__ . '\\Check::iri');
+        $this->registerFormat('iri-reference', __NAMESPACE__ . '\\Check::iriReference');
+        $this->registerFormat('uri-template', __NAMESPACE__ . '\\Check::uriTemplate');
+        $this->registerFormat('json-pointer', __NAMESPACE__ . '\\Check::jsonPointer');
+        $this->registerFormat('relative-json-pointer', __NAMESPACE__ . '\\Check::relativeJsonPointer');
+        $this->registerFormat('regex', __NAMESPACE__ . '\\Check::regex');
+    }
+
+    /**
+     * Register new format
+     * @param string $formatId
+     * @param callable $validation
+     */
+    public function registerFormat(string $formatId, callable $validation): void
+    {
+        $this->formats->{$formatId} = $validation;
     }
 
     /**
@@ -86,7 +109,7 @@ class Validator
         $this->validateOneOf($data, $schema);
         $this->validateNot($data, $schema);
 
-        switch ($schema->getMainType()) {
+        switch (gettype($data)) {
             case 'string':
                 {
                     $this->validateMinLength($data, $schema);
@@ -96,7 +119,7 @@ class Validator
                     $this->validateContentMediaType($data, $schema);
                     break;
                 }
-            case 'number':
+            case 'double':
             case 'integer':
                 {
                     $this->validateMultipleOf($data, $schema);
@@ -185,6 +208,7 @@ class Validator
         }
 
         if ($matchType !== false) {
+            /*
             $schema->setMainType((string)$matchType);
 
             if (!call_user_func_array(__NAMESPACE__ . '\\Check::' . $schema->getMainType(), [$data])) {
@@ -195,6 +219,8 @@ class Validator
                     $schema->getPath()
                 ));
             }
+            */
+            // @todo
         } else {
             throw new ValidationException(sprintf(
                 'There is provided schema with type/s "%s" which not match with the data type "%s" (%s)',
@@ -218,7 +244,16 @@ class Validator
         }
 
         $format = $schema->getSchema()->format;
-        $isValid = call_user_func_array($this->formats->{$format}->validation, [$data]);
+
+        if (!property_exists($this->formats, $format)) {
+            throw new ValidationException(sprintf(
+                'Unknown format "%s" (%s)',
+                $format,
+                $schema->getPath() . '/format'
+            ));
+        }
+
+        $isValid = call_user_func_array($this->formats->{$format}, [$data]);
 
         if (!$isValid) {
             throw new ValidationException(sprintf(
@@ -842,7 +877,6 @@ class Validator
      * Validate dependencies
      * @param object $data
      * @param Schema $schema
-     * @param int $mode
      * @throws SchemaException
      * @throws ValidationException
      */

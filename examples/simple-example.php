@@ -9,9 +9,8 @@ $jsonSchema = '{
     "minimum": 10
 }';
 
-$formats = new \FrontLayer\JsonSchema\Formats();
-$schema = new \FrontLayer\JsonSchema\Schema(json_decode($jsonSchema), $formats);
-$validator = new \FrontLayer\JsonSchema\Validator($formats);
+$schema = new \FrontLayer\JsonSchema\Schema(json_decode($jsonSchema));
+$validator = new \FrontLayer\JsonSchema\Validator();
 
 try {
     $validator->validate($data, $schema);

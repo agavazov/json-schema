@@ -87,6 +87,10 @@ class Check
      */
     public static function dateTime(string $dateTime): bool
     {
+        if (!is_string($dateTime)) {
+            return false;
+        }
+
         //$regex = '/^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))$/'; // with 60 sec included
         $regex = '/^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))$/';
 
@@ -100,6 +104,10 @@ class Check
      */
     public static function time(string $time): bool
     {
+        if (!is_string($time)) {
+            return false;
+        }
+
         $regex = '/^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))$/';
 
         return (bool)preg_match($regex, $time);
@@ -112,6 +120,10 @@ class Check
      */
     public static function date(string $date): bool
     {
+        if (!is_string($date)) {
+            return false;
+        }
+
         $regex = '/^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/';
 
         return (bool)preg_match($regex, $date);
@@ -124,6 +136,10 @@ class Check
      */
     public static function email(string $email): bool
     {
+        if (!is_string($email)) {
+            return false;
+        }
+
         return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);
     }
 
@@ -134,6 +150,10 @@ class Check
      */
     public static function idnEmail(string $email): bool
     {
+        if (!is_string($email)) {
+            return false;
+        }
+
         $email = implode('@', array_map(function ($fragment) {
             return idn_to_ascii($fragment, 0, INTL_IDNA_VARIANT_UTS46);
         }, explode('@', $email)));
@@ -148,6 +168,10 @@ class Check
      */
     public static function hostname(string $hostname): bool
     {
+        if (!is_string($hostname)) {
+            return false;
+        }
+
         $regex = '/^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9]){1,63}\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9]){1,63}$/i';
 
         if (preg_match($regex, $hostname)) {
@@ -168,6 +192,10 @@ class Check
      */
     public static function idnHostname(string $hostname): bool
     {
+        if (!is_string($hostname)) {
+            return false;
+        }
+
         // Hangul single dot can be in the beginning but not after that
         $hangulDot = mb_strpos($hostname, '〮');
         if ($hangulDot !== false && $hangulDot !== 0) {
@@ -181,11 +209,19 @@ class Check
 
     public static function ipv4(string $ipAddress): bool
     {
+        if (!is_string($ipAddress)) {
+            return false;
+        }
+
         return (bool)filter_var($ipAddress, FILTER_VALIDATE_IP);
     }
 
     public static function ipv6(string $ipAddress): bool
     {
+        if (!is_string($ipAddress)) {
+            return false;
+        }
+
         return (bool)filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
     }
 
@@ -196,6 +232,10 @@ class Check
      */
     public static function uri(string $uri): bool
     {
+        if (!is_string($uri)) {
+            return false;
+        }
+
         $uriData = (object)parse_url($uri);
 
         if (!$uriData) {
@@ -228,6 +268,10 @@ class Check
      */
     public static function uriReference(string $uri): bool
     {
+        if (!is_string($uri)) {
+            return false;
+        }
+
         $uriData = (object)parse_url($uri);
 
         if (!$uriData) {
@@ -256,6 +300,10 @@ class Check
      */
     public static function iri(string $iri): bool
     {
+        if (!is_string($iri)) {
+            return false;
+        }
+
         $iriData = (object)parse_url($iri);
 
         if (!$iriData) {
@@ -275,6 +323,10 @@ class Check
 
     public static function iriReference(string $iriReference): bool
     {
+        if (!is_string($iriReference)) {
+            return false;
+        }
+
         $iriData = (object)parse_url($iriReference);
 
         if (!$iriData) {
@@ -299,6 +351,10 @@ class Check
      */
     public static function uriTemplate(string $uriTemplate): bool
     {
+        if (!is_string($uriTemplate)) {
+            return false;
+        }
+
         if (substr_count($uriTemplate, '{') !== substr_count($uriTemplate, '}')) {
             return false;
         }
@@ -328,6 +384,10 @@ class Check
      */
     public static function jsonPointer(string $jsonPointer): bool
     {
+        if (!is_string($jsonPointer)) {
+            return false;
+        }
+
         if ($jsonPointer !== '' && !(bool)preg_match('~^(?:/|(?:/[^/#]*)*)$~', $jsonPointer)) {
             return false;
         }
@@ -346,6 +406,10 @@ class Check
      */
     public static function relativeJsonPointer(string $relativeJsonPointer): bool
     {
+        if (!is_string($relativeJsonPointer)) {
+            return false;
+        }
+
         if (!preg_match('~^(0|[1-9][0-9]*)((?:/[^/#]+)*)(#?)$~', $relativeJsonPointer)) {
             return false;
         }
@@ -364,6 +428,10 @@ class Check
      */
     public static function regex(string $regex): bool
     {
+        if (!is_string($regex)) {
+            return false;
+        }
+
         if (substr($regex, -2) === '\Z' || substr($regex, 0, 2) === '\A') {
             return false;
         }
@@ -378,6 +446,10 @@ class Check
      */
     public static function path(string $path): bool
     {
+        if (!is_string($path)) {
+            return false;
+        }
+
         return (bool)preg_match('/^(?:(%[0-9a-f]{2})|[a-z0-9\/:@\-._~\!\$&\'\(\)*+,;=])*$/i', $path);
     }
 
@@ -388,6 +460,10 @@ class Check
      */
     public static function fragment(string $fragment): bool
     {
+        if (!is_string($fragment)) {
+            return false;
+        }
+
         return (bool)preg_match('/^(?:(%[0-9a-f]{2})|[a-z0-9\/:@\-._~\!\$&\'\(\)*+,;=])*$/i', $fragment);
     }
 }

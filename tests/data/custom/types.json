@@ -209,5 +209,67 @@
                 "valid": false
             }
         ]
+    },
+    {
+        "description": "multiple type",
+        "schema": {"type": ["string", "number"]},
+        "tests": [
+            {
+                "description": "allow string",
+                "data": "hello world",
+                "valid": true
+            },
+            {
+                "description": "allow number",
+                "data": 1234,
+                "valid": true
+            },
+            {
+                "description": "don`t allow objects",
+                "data": {"hello": "world"},
+                "valid": false
+            },
+            {
+                "description": "don`t allow arrays",
+                "data": ["hello", "world"],
+                "valid": false
+            },
+            {
+                "description": "don`t allow boolean",
+                "data": false,
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "ignores",
+        "schema": {"maxLength": 5},
+        "tests": [
+            {
+                "description": "validate max length",
+                "data": "hi",
+                "valid": true
+            },
+            {
+                "description": "validate max length is higher",
+                "data": "hello world",
+                "valid": false
+            },
+            {
+                "description": "ignores objects",
+                "data": {"hello": "world"},
+                "valid": true
+            },
+            {
+                "description": "ignores arrays",
+                "data": ["hello", "world"],
+                "valid": true
+            },
+            {
+                "description": "ignores boolean",
+                "data": false,
+                "valid": true
+            }
+        ]
     }
 ]

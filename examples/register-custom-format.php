@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require __DIR__ . './../vendor/autoload.php';
 
-use \FrontLayer\JsonSchema\Formats;
 use \FrontLayer\JsonSchema\Schema;
 use \FrontLayer\JsonSchema\Validator;
 use \FrontLayer\JsonSchema\ValidationException;
@@ -17,22 +16,14 @@ $jsonSchema = (object)[
     'format' => 'objectId'
 ];
 
-// Initialize formats & register custom format
-$formats = new Formats();
-
-$formats->registerFormat('objectId', 'string', function (string $input): bool {
-    return (bool)preg_match('/^[a-f\d]{24}$/i', $input);
-});
-
-// Initialize schema
+// Initialize
 $schema = new Schema($jsonSchema);
+$validator = new Validator(Validator::MODE_CAST);
 
-$formats->registerFormat('objectId', 'string', function (string $input): bool {
+// Register new format
+$validator->registerFormat('objectId', function (string $input): bool {
     return (bool)preg_match('/^[a-f\d]{24}$/i', $input);
 });
-
-// Initialize validator
-$validator = new Validator($formats, Validator::MODE_CAST);
 
 // Validate and catch the problems
 try {
