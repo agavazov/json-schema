@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace FrontLayer\JsonSchema;
 
@@ -53,7 +54,14 @@ class Schema
             $this->schema = $schema;
         }
 
+        // Register current reference in references path-map
         $this->references->{$this->getPath()} = $this;
+
+        // Check for identification $id
+        if ($schemaType === 'object' && property_exists($this->schema, '$id')) {
+            // If there is $id then add it in references with "$" prefix to exclude conflicts with paths
+            $this->references->{'$' . $this->schema->{'$id'}} = $this;
+        }
 
         // Check for valid property type
         if ($schemaType !== 'object' && $schemaType !== 'boolean') {
@@ -126,18 +134,16 @@ class Schema
 
     /**
      * Return current schema structure
+     * @param bool $skipExtendCheck
      * @return object|bool
+     * @throws SchemaException
      */
-    public function getSchema()
+    public function getSchema($skipExtendCheck = false)
     {
-        if (is_object($this->schema) && property_exists($this->schema, '$ref')) {
-            $ref = $this->schema->{'$ref'};
-
-            if ($ref === '#') {
-                $ref = '#/';
+        if (!$skipExtendCheck) {
+            if (is_object($this->schema) && property_exists($this->schema, '$ref') && is_string($this->schema->{'$ref'})) {
+                return $this->extend($this->schema->{'$ref'});
             }
-
-            return $this->references->{$ref}->getSchema();
         }
 
         return $this->schema;
@@ -178,6 +184,95 @@ class Schema
 
         // Create (sub-)schema object
         $schema = new Schema($schema, $newPath, $this->references);
+    }
+
+    /**
+     * Extend by reference
+     * @param $ref
+     * @return mixed
+     * @throws SchemaException
+     */
+    protected function extend(string $ref)
+    {
+        // Fix root $ref
+        if ($ref === '#') {
+            $ref = '#/';
+        }
+
+        // Try quick extend by path
+        if (property_exists($this->references, $ref)) {
+            return $this->references->{$ref}->getSchema();
+        }
+
+        // Try to find by id (with "$" prefix)
+        if (property_exists($this->references, '$' . $ref)) {
+            return $this->references->{'$' . $ref}->getSchema();
+        }
+
+        // Try to find by path
+        if (!property_exists($this->references, $ref)) {
+            $hasMatch = true;
+
+            $refParts = explode('/', $ref);
+
+            if (substr($ref, 0, 2) === '#/') {
+                array_shift($refParts);
+            }
+
+            $tmp = $this->references->{'#/'}->getSchema(true);
+
+            foreach ($refParts as $part) {
+                $part = str_replace(['~0', '~1', '%25', '%22'], ['~', '/', '%', '"'], $part);
+
+                if ($tmp instanceof Schema) {
+                    $tmp = $tmp->{$part}->getSchema();
+                }
+
+                if (property_exists($tmp, $part)) {
+                    if (is_array($tmp)) {
+                        $tmp = $tmp[$part];
+                    } else {
+                        $tmp = $tmp->{$part};
+                    }
+                } else {
+                    $hasMatch = false;
+                    break;
+                }
+            }
+
+            // Of there is a match
+            if ($hasMatch) {
+                if ($tmp instanceof Schema) {
+                    // Register it in directly
+                    $this->references->{$ref} = $tmp;
+                } else {
+                    // Register it in references
+                    new Schema($tmp, $ref, $this->references);
+                }
+
+                return $this->references->{$ref}->getSchema();
+            }
+
+            unset($tmp);
+        }
+
+        // Check is URL
+        if (Check::uri($ref)) {
+            // @todo add curl & timeout
+            $json = @file_get_contents($ref);
+
+            if (is_string($json)) {
+                $json = json_decode($json);
+                new Schema($json, $ref, $this->references);
+                return $this->references->{$ref}->getSchema();
+            }
+        }
+
+        throw new SchemaException(sprintf(
+            'Unknown reference "%s" (%s)',
+            $this->schema->{'$ref'},
+            $this->getPath() . '/$ref'
+        ));
     }
 
     /**

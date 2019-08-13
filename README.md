@@ -25,7 +25,7 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 - Complete `MODE_APPLY_DEFAULTS`
 - Complete: `default`, `definitions`, `not`, `if/then/else`
 - Add develop branch & start using Git-Flow 
-- Complete: `ref`, `refRemote` (it will be created static helper function which will be used from OpenAPI too)
+- Complete: `refRemote`
 - Add versions for composer
 - Grammatically correct comments and exceptions
 - Add phpunit
