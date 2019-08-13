@@ -371,13 +371,23 @@ class Schema
             return;
         }
 
-        // If is already transformed to Schema
-        if ($this->schema->allOf instanceof Schema) {
-            return;
+        // Check for valid property type
+        if (!is_array($this->schema->allOf)) {
+            throw new SchemaException(sprintf(
+                'You have "allOf" which value is not a "array" but it is "%s" (%s)',
+                gettype($this->schema->allOf),
+                $this->getPath() . '/allOf'
+            ));
         }
 
-        // Transform to schema
-        $this->transform('allOf');
+        foreach ($this->schema->allOf as $key => $value) {
+            if ($value instanceof Schema) {
+                continue;
+            }
+
+            // Transform to schema
+            $this->transform('allOf', $key);
+        }
     }
 
     /**
@@ -391,13 +401,23 @@ class Schema
             return;
         }
 
-        // If is already transformed to Schema
-        if ($this->schema->anyOf instanceof Schema) {
-            return;
+        // Check for valid property type
+        if (!is_array($this->schema->anyOf)) {
+            throw new SchemaException(sprintf(
+                'You have "anyOf" which value is not a "array" but it is "%s" (%s)',
+                gettype($this->schema->anyOf),
+                $this->getPath() . '/anyOf'
+            ));
         }
 
-        // Transform to schema
-        $this->transform('anyOf');
+        foreach ($this->schema->anyOf as $key => $value) {
+            if ($value instanceof Schema) {
+                continue;
+            }
+
+            // Transform to schema
+            $this->transform('anyOf', $key);
+        }
     }
 
     /**
@@ -411,13 +431,23 @@ class Schema
             return;
         }
 
-        // If is already transformed to Schema
-        if ($this->schema->oneOf instanceof Schema) {
-            return;
+        // Check for valid property type
+        if (!is_array($this->schema->oneOf)) {
+            throw new SchemaException(sprintf(
+                'You have "oneOf" which value is not a "array" but it is "%s" (%s)',
+                gettype($this->schema->oneOf),
+                $this->getPath() . '/oneOf'
+            ));
         }
 
-        // Transform to schema
-        $this->transform('oneOf');
+        foreach ($this->schema->oneOf as $key => $value) {
+            if ($value instanceof Schema) {
+                continue;
+            }
+
+            // Transform to schema
+            $this->transform('oneOf', $key);
+        }
     }
 
     /**

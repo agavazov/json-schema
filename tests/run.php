@@ -337,9 +337,6 @@ $test->showOnly(Tests::SHOW_FAIL);
 // @todo this must be fine - delete it and fix it
 $test->addFilter('all items match schema', Tests::FILTER_EXCLUDE);
 
-// @todo remove when allOf is ready
-$test->addFilter('additionalProperties should not look in applicators', Tests::FILTER_EXCLUDE);
-
 // @todo "pseudo-arrays" are arrays or not?
 $test->addFilter('JavaScript pseudo-array is valid', Tests::FILTER_EXCLUDE);
 

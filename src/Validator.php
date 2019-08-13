@@ -184,7 +184,6 @@ class Validator
 
         // Decide which format to choose
         $dataType = strtolower(gettype($data));
-        $matchType = false;
 
         // Special integer/number cases and mixes
         if ($dataType === 'double' || $dataType === 'float') {
@@ -200,6 +199,8 @@ class Validator
         }
 
         // Check for type match
+        $matchType = false;
+
         foreach ($schema->getSchema()->type as $type) {
             if ($dataType === $type) {
                 $matchType = $type;
@@ -207,21 +208,7 @@ class Validator
             }
         }
 
-        if ($matchType !== false) {
-            /*
-            $schema->setMainType((string)$matchType);
-
-            if (!call_user_func_array(__NAMESPACE__ . '\\Check::' . $schema->getMainType(), [$data])) {
-                throw new ValidationException(sprintf(
-                    'Provided data type "%s" does not validated with schema type "%s" (%s)',
-                    $dataType,
-                    $schema->getMainType(),
-                    $schema->getPath()
-                ));
-            }
-            */
-            // @todo
-        } else {
+        if ($matchType === false) {
             throw new ValidationException(sprintf(
                 'There is provided schema with type/s "%s" which not match with the data type "%s" (%s)',
                 implode(';', $schema->getSchema()->type),
@@ -352,7 +339,11 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate allOf
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateAllOf(&$data, Schema $schema): void
     {
@@ -361,11 +352,18 @@ class Validator
             return;
         }
 
-        // @todo
+        // Check for full match
+        foreach ($schema->getSchema()->allOf as $subSchema) {
+            $this->validate($data, $subSchema);
+        }
     }
 
     /**
-     * @todo
+     * Validate anyOf
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateAnyOf(&$data, Schema $schema): void
     {
@@ -374,11 +372,25 @@ class Validator
             return;
         }
 
-        // @todo
+        // Check for any match
+        foreach ($schema->getSchema()->anyOf as $subSchema) {
+            try {
+                $this->validate($data, $subSchema);
+                return;
+            } catch (ValidationException $e) {
+                continue;
+            }
+        }
+
+        throw new ValidationException('There is no match with "anyOf" schema');
     }
 
     /**
-     * @todo
+     * Validate oneOf
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
     protected function validateOneOf(&$data, Schema $schema): void
     {
@@ -387,7 +399,21 @@ class Validator
             return;
         }
 
-        // @todo
+        // Check for single match
+        $success = 0;
+
+        foreach ($schema->getSchema()->oneOf as $subSchema) {
+            try {
+                $this->validate($data, $subSchema);
+                $success++;
+            } catch (ValidationException $e) {
+                continue;
+            }
+        }
+
+        if ($success !== 1) {
+            throw new ValidationException('There is no match with "anyOf" schema');
+        }
     }
 
     /**

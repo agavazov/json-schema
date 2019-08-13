@@ -23,7 +23,7 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 ## What remains to be done `@todo`
 - Complete `MODE_REMOVE_ADDITIONALS`
 - Complete `MODE_APPLY_DEFAULTS`
-- Complete: `default`, `definitions`, `allOf`, `anyOf`, `oneOf`, `not`, `if/then/else`
+- Complete: `default`, `definitions`, `not`, `if/then/else`
 - Add develop branch & start using Git-Flow 
 - Complete: `ref`, `refRemote` (it will be created static helper function which will be used from OpenAPI too)
 - Add versions for composer
