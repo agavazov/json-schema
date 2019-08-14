@@ -100,29 +100,29 @@ class Cast
     {
         switch (gettype($data)) {
             case 'integer':
-                {
-                    if ($data === 1) {
-                        return true;
-                    } elseif ($data === 0) {
-                        return false;
-                    }
-
-                    break;
+            {
+                if ($data === 1) {
+                    return true;
+                } elseif ($data === 0) {
+                    return false;
                 }
+
+                break;
+            }
             case 'string':
-                {
-                    if ($data === '1') {
-                        return true;
-                    } elseif ($data === '0') {
-                        return false;
-                    } elseif (strtolower($data) === 'true') {
-                        return true;
-                    } elseif (strtolower($data) === 'false') {
-                        return false;
-                    }
-
-                    break;
+            {
+                if ($data === '1') {
+                    return true;
+                } elseif ($data === '0') {
+                    return false;
+                } elseif (strtolower($data) === 'true') {
+                    return true;
+                } elseif (strtolower($data) === 'false') {
+                    return false;
                 }
+
+                break;
+            }
         }
 
         return $data;

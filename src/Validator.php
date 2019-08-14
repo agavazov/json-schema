@@ -96,9 +96,7 @@ class Validator
         // Validate
         $this->validateType($data, $schema);
         $this->validateFormat($data, $schema);
-        $this->validateIf($data, $schema);
-        $this->validateThen($data, $schema);
-        $this->validateElse($data, $schema);
+        $this->validateIfThenElse($data, $schema);
         $this->validateConst($data, $schema);
         $this->validateEnum($data, $schema);
         $this->validateAllOf($data, $schema);
@@ -108,46 +106,46 @@ class Validator
 
         switch (gettype($data)) {
             case 'string':
-                {
-                    $this->validateMinLength($data, $schema);
-                    $this->validateMaxLength($data, $schema);
-                    $this->validatePattern($data, $schema);
-                    $this->validateContentEncoding($data, $schema);
-                    $this->validateContentMediaType($data, $schema);
-                    break;
-                }
+            {
+                $this->validateMinLength($data, $schema);
+                $this->validateMaxLength($data, $schema);
+                $this->validatePattern($data, $schema);
+                $this->validateContentEncoding($data, $schema);
+                $this->validateContentMediaType($data, $schema);
+                break;
+            }
             case 'double':
             case 'integer':
-                {
-                    $this->validateMultipleOf($data, $schema);
-                    $this->validateMinimum($data, $schema);
-                    $this->validateExclusiveMinimum($data, $schema);
-                    $this->validateMaximum($data, $schema);
-                    $this->validateExclusiveMaximum($data, $schema);
-                    break;
-                }
+            {
+                $this->validateMultipleOf($data, $schema);
+                $this->validateMinimum($data, $schema);
+                $this->validateExclusiveMinimum($data, $schema);
+                $this->validateMaximum($data, $schema);
+                $this->validateExclusiveMaximum($data, $schema);
+                break;
+            }
             case 'object':
-                {
-                    $this->validateProperties($data, $schema);
-                    $this->validateAdditionalProperties($data, $schema);
-                    $this->validateRequired($data, $schema);
-                    $this->validatePropertyNames($data, $schema);
-                    $this->validateMinProperties($data, $schema);
-                    $this->validateMaxProperties($data, $schema);
-                    $this->validateDependencies($data, $schema);
-                    $this->validatePatternProperties($data, $schema);
-                    break;
-                }
+            {
+                $this->validateProperties($data, $schema);
+                $this->validateAdditionalProperties($data, $schema);
+                $this->validateRequired($data, $schema);
+                $this->validatePropertyNames($data, $schema);
+                $this->validateMinProperties($data, $schema);
+                $this->validateMaxProperties($data, $schema);
+                $this->validateDependencies($data, $schema);
+                $this->validatePatternProperties($data, $schema);
+                break;
+            }
             case 'array':
-                {
-                    $this->validateItems($data, $schema);
-                    $this->validateContains($data, $schema);
-                    $this->validateAdditionalItems($data, $schema);
-                    $this->validateMinItems($data, $schema);
-                    $this->validateMaxItems($data, $schema);
-                    $this->validateUniqueItems($data, $schema);
-                    break;
-                }
+            {
+                $this->validateItems($data, $schema);
+                $this->validateContains($data, $schema);
+                $this->validateAdditionalItems($data, $schema);
+                $this->validateMinItems($data, $schema);
+                $this->validateMaxItems($data, $schema);
+                $this->validateUniqueItems($data, $schema);
+                break;
+            }
         }
 
         return $data;
@@ -251,42 +249,41 @@ class Validator
     }
 
     /**
-     * @todo
+     * Validate If/Then/Else
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     * @throws ValidationException
      */
-    protected function validateIf(&$data, Schema $schema): void
+    protected function validateIfThenElse(&$data, Schema $schema): void
     {
         // Check exists
         if (!property_exists($schema->getSchema(), 'if')) {
             return;
         }
 
-        // @todo
-    }
-
-    /**
-     * @todo
-     */
-    protected function validateThen(&$data, Schema $schema): void
-    {
-        // Check exists
-        if (!property_exists($schema->getSchema(), 'then')) {
+        // Second check
+        if (!property_exists($schema->getSchema(), 'then') && !property_exists($schema->getSchema(), 'else')) {
             return;
         }
 
-        // @todo
-    }
-
-    /**
-     * @todo
-     */
-    protected function validateElse(&$data, Schema $schema): void
-    {
-        // Check exists
-        if (!property_exists($schema->getSchema(), 'else')) {
-            return;
+        // Check if condition
+        $ifSucceed = true;
+        try {
+            $this->validate($data, $schema->getSchema()->if);
+        } catch (ValidationException $e) {
+            $ifSucceed = false;
         }
 
-        // @todo
+        if ($ifSucceed) {
+            if (property_exists($schema->getSchema(), 'then')) {
+                $this->validate($data, $schema->getSchema()->then);
+            }
+        } else {
+            if (property_exists($schema->getSchema(), 'else')) {
+                $this->validate($data, $schema->getSchema()->else);
+            }
+        }
     }
 
     /**
@@ -532,10 +529,10 @@ class Validator
 
         switch ($schema->getSchema()->contentEncoding) {
             case 'base64':
-                {
-                    $encoded = base64_decode($encoded, true);
-                    break;
-                }
+            {
+                $encoded = base64_decode($encoded, true);
+                break;
+            }
         }
 
         if ($encoded === false) {
@@ -567,14 +564,14 @@ class Validator
 
         switch ($schema->getSchema()->contentMediaType) {
             case 'application/json':
-                {
-                    json_decode($data);
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        $isValid = false;
-                    }
-
-                    break;
+            {
+                json_decode($data);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $isValid = false;
                 }
+
+                break;
+            }
         }
 
         if ($isValid !== true) {

@@ -73,51 +73,51 @@ class Helper
         // Check by type
         switch ($type) {
             case 'object':
-                {
-                    // Check keys
-                    if (!self::compare(array_keys((array)$a), array_keys((array)$b))) {
+            {
+                // Check keys
+                if (!self::compare(array_keys((array)$a), array_keys((array)$b))) {
+                    return false;
+                }
+
+                // Check values
+                foreach ($a as $key => $aValue) {
+                    if (!self::compare($aValue, $b->{$key})) {
                         return false;
                     }
-
-                    // Check values
-                    foreach ($a as $key => $aValue) {
-                        if (!self::compare($aValue, $b->{$key})) {
-                            return false;
-                        }
-                    }
-
-                    return true;
                 }
+
+                return true;
+            }
             case 'array':
-                {
-                    // If both are associative array they will be casted as objects
-                    if (array_values($a) !== $a && array_values($b) !== $b) {
-                        return self::compare((object)$a, (object)$b);
-                    }
+            {
+                // If both are associative array they will be casted as objects
+                if (array_values($a) !== $a && array_values($b) !== $b) {
+                    return self::compare((object)$a, (object)$b);
+                }
 
-                    // Check arrays length
-                    if (count($a) !== count($b)) {
+                // Check arrays length
+                if (count($a) !== count($b)) {
+                    return false;
+                }
+
+                // Sort & compare 1st level
+                $a = self::sortFirstLevelArrayValues($a);
+                $b = self::sortFirstLevelArrayValues($b);
+
+                // Compare by sorted keys
+                foreach ($a as $key => $aValue) {
+                    if (self::compare($aValue, $b[$key]) === false) {
                         return false;
                     }
-
-                    // Sort & compare 1st level
-                    $a = self::sortFirstLevelArrayValues($a);
-                    $b = self::sortFirstLevelArrayValues($b);
-
-                    // Compare by sorted keys
-                    foreach ($a as $key => $aValue) {
-                        if (self::compare($aValue, $b[$key]) === false) {
-                            return false;
-                        }
-                    }
-
-                    // Of there are no difference return true
-                    return true;
                 }
+
+                // Of there are no difference return true
+                return true;
+            }
             default:
-                {
-                    return $a === $b;
-                }
+            {
+                return $a === $b;
+            }
         }
     }
 

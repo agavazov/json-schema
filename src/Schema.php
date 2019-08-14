@@ -378,6 +378,12 @@ class Schema
             return;
         }
 
+        // Skip "if" when "then" and "else" are missing
+        if (!property_exists($this->schema, 'then') && !property_exists($this->schema, 'else')) {
+            unset($this->schema->if);
+            return;
+        }
+
         // If is already transformed to Schema
         if ($this->schema->if instanceof Schema) {
             return;
@@ -398,6 +404,12 @@ class Schema
             return;
         }
 
+        // Skip "then" when "if" is missing
+        if (!property_exists($this->schema, 'if')) {
+            unset($this->schema->then);
+            return;
+        }
+
         // If is already transformed to Schema
         if ($this->schema->then instanceof Schema) {
             return;
@@ -415,6 +427,12 @@ class Schema
     {
         // Check exists
         if (!property_exists($this->schema, 'else')) {
+            return;
+        }
+
+        // Skip "else" when "if" is missing
+        if (!property_exists($this->schema, 'if')) {
+            unset($this->schema->else);
             return;
         }
 
