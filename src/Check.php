@@ -207,6 +207,11 @@ class Check
         return self::hostname((string)$hostname);
     }
 
+    /**
+     * ipv4 check
+     * @param string $ipAddress
+     * @return bool
+     */
     public static function ipv4(string $ipAddress): bool
     {
         if (!is_string($ipAddress)) {
@@ -216,6 +221,11 @@ class Check
         return (bool)filter_var($ipAddress, FILTER_VALIDATE_IP);
     }
 
+    /**
+     * ipv6 check
+     * @param string $ipAddress
+     * @return bool
+     */
     public static function ipv6(string $ipAddress): bool
     {
         if (!is_string($ipAddress)) {
@@ -321,6 +331,11 @@ class Check
         return self::uri($newIri);
     }
 
+    /**
+     * Iri reference check
+     * @param string $iriReference
+     * @return bool
+     */
     public static function iriReference(string $iriReference): bool
     {
         if (!is_string($iriReference)) {
