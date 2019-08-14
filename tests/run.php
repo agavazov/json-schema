@@ -215,7 +215,8 @@ class Tests
         try {
             $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema);
             $validator = new \FrontLayer\JsonSchema\Validator($mode);
-            $newData = $validator->validate($test->data, $schema);
+            $data = property_exists($test, 'data') ? $test->data : null;
+            $newData = $validator->validate($data, $schema);
             $testResult = true;
         } catch (\FrontLayer\JsonSchema\ValidationException $exception) {
             $testResult = false;
@@ -225,7 +226,7 @@ class Tests
         }
 
         if (property_exists($test, 'expect')) {
-            if (in_array(gettype($test->expect), ['object', 'array'])) {
+            if (in_array(gettype($newData), ['object', 'array']) && in_array(gettype($test->expect), ['object', 'array'])) {
                 if ($newData != $test->expect) {
                     $testResult = false;
                 }
@@ -274,9 +275,9 @@ class Tests
      * @param bool $success
      * @param string $description
      * @param string|null $file
-     * @param Exception|null $exceptionMessage
+     * @param Exception|null $exception
      */
-    public function results(bool $success, string $description, string $file = null, ?\Exception $exceptionMessage = null): void
+    public function results(bool $success, string $description, string $file = null, ?\Exception $exception = null): void
     {
         if ($this->showOnly !== self::SHOW_ALL) {
             if ($this->showOnly === self::SHOW_SUCCESS && $success == !true) {
@@ -301,8 +302,8 @@ class Tests
             $log .= ' (' . $file . ')';
         }
 
-        if ($exceptionMessage) {
-            $log .= ' > ' . $exceptionMessage->getMessage();
+        if ($exception) {
+            $log .= ' > ' . $exception->getMessage();
         }
 
         if (!$success) {

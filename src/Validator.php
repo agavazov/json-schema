@@ -11,14 +11,9 @@ class Validator
     const MODE_CAST = 1;
 
     /**
-     * Apply default values from the schema to the data
-     */
-    const MODE_APPLY_DEFAULTS = 2; // @todo
-
-    /**
      * Remove additional properties & additional items if they are not set to TRUE
      */
-    const MODE_REMOVE_ADDITIONALS = 4; // @todo
+    const MODE_REMOVE_ADDITIONALS = 2; // @todo
 
     /**
      * Registered formats
@@ -90,6 +85,15 @@ class Validator
                 ));
             } else {
                 return true; // When is "true" then it will allow everything
+            }
+        }
+
+        // Apply default
+        if (property_exists($schema->getSchema(), 'default')) {
+            // Unfortunately php does not support "undefined" so this is why "default" will be applied when data is null
+            if ($data === null) {
+                // When default is used the schema is always represent as true
+                return $schema->getSchema()->default;
             }
         }
 
@@ -223,6 +227,7 @@ class Validator
      */
     protected function validateFormat(&$data, Schema $schema): void
     {
+        // Check exists
         if (!property_exists($schema->getSchema(), 'format')) {
             return;
         }
@@ -743,9 +748,32 @@ class Validator
             return;
         }
 
+        // Apply default
+        $skipDefaultValidations = [];
+        foreach ($schema->getSchema()->properties as $propertyKey => $propertySchema) {
+            /* @var $propertySchema Schema */
+
+            if (!is_object($propertySchema->getSchema())) {
+                continue;
+            }
+
+            if (!property_exists($propertySchema->getSchema(), 'default')) {
+                continue;
+            }
+
+            if (property_exists($data, $propertyKey)) {
+                continue;
+            }
+
+            // When default is used the schema is always represent as true
+            $skipDefaultValidations[] = $propertyKey;
+
+            // Set value
+            $data->{$propertyKey} = $propertySchema->getSchema()->default;
+        }
+
         // Get additional properties
-        $additionalsDefault = true;
-        $additionalProperties = $additionalsDefault;
+        $additionalProperties = true;
 
         if (property_exists($schema->getSchema(), 'additionalProperties')) {
             $additionalProperties = $schema->getSchema()->additionalProperties->getSchema();
@@ -759,6 +787,11 @@ class Validator
 
         // Check each data property
         foreach ($data as $key => $propertyData) {
+            // When default is used the schema is always represent as true
+            if (in_array($key, $skipDefaultValidations)) {
+                continue;
+            }
+
             // Validate mapped properties
             if (property_exists($schema->getSchema()->properties, $key)) {
                 $data->{$key} = $this->validate($propertyData, $schema->getSchema()->properties->{$key});
@@ -996,8 +1029,7 @@ class Validator
 
         // Get additional items
         $tupleValidation = is_array($schema->getSchema()->items);
-        $additionalsDefault = true;
-        $additionalItems = $additionalsDefault;
+        $additionalItems = true;
 
         if (property_exists($schema->getSchema(), 'additionalItems')) {
             $additionalItems = $schema->getSchema()->additionalItems->getSchema();

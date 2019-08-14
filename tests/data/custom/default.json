@@ -1,0 +1,46 @@
+[
+    {
+        "description": "add default value when data is missing",
+        "schema": {
+            "type": "integer",
+            "default": 1
+        },
+        "tests": [
+            {
+                "description": "missing property",
+                "valid": true,
+                "data": null,
+                "expect": 1
+            }
+        ]
+    },
+    {
+        "description": "add default property value",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "test": {
+                    "type": "integer",
+                    "default": 1
+                }
+            }
+        },
+        "tests": [
+            {
+                "description": "missing property",
+                "valid": true,
+                "data": {
+                    "something": "else"
+                },
+                "expect": {"test": 1, "something": "else"}
+            },
+            {
+                "description": "invalid data",
+                "valid": false,
+                "data": {
+                    "test": "string"
+                }
+            }
+        ]
+    }
+]

@@ -291,7 +291,7 @@ class Schema
                 }
             }
 
-            $setPath = preg_replace('/.*\#/', '#', $ref);
+            $setPath = preg_replace('/.*#/', '#', $ref);
             new Schema($json, $setPath, $this->references);
             return $this->references->{$setPath}->getSchema();
         }
