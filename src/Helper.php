@@ -64,11 +64,22 @@ class Helper
      */
     public static function compare($a, $b): bool
     {
-        $type = gettype($a);
+        $typeA = gettype($a);
+        $typeB = gettype($b);
 
-        if ($type !== gettype($b)) {
+        if ($typeA === 'integer' || $typeA === 'double') {
+            $typeA = 'number';
+        }
+
+        if ($typeB === 'integer' || $typeB === 'double') {
+            $typeB = 'number';
+        }
+
+        if ($typeA !== $typeB) {
             return false;
         }
+
+        $type = $typeA;
 
         // Check by type
         switch ($type) {
@@ -113,6 +124,10 @@ class Helper
 
                 // Of there are no difference return true
                 return true;
+            }
+            case 'number':
+            {
+                return $a == $b;
             }
             default:
             {
