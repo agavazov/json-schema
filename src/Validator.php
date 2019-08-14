@@ -13,7 +13,7 @@ class Validator
     /**
      * Remove additional properties & additional items if they are not set to TRUE
      */
-    const MODE_REMOVE_ADDITIONALS = 2; // @todo
+    const MODE_REMOVE_ADDITIONALS = 2;
 
     /**
      * Registered formats
@@ -84,7 +84,7 @@ class Validator
                     $schema->getPath()
                 ));
             } else {
-                return true; // When is "true" then it will allow everything
+                return $data; // When is "true" then it will allow everything
             }
         }
 
@@ -138,6 +138,8 @@ class Validator
                 $this->validateMaxProperties($data, $schema);
                 $this->validateDependencies($data, $schema);
                 $this->validatePatternProperties($data, $schema);
+
+                $this->removeAdditionalProperties($data, $schema);
                 break;
             }
             case 'array':
@@ -148,6 +150,8 @@ class Validator
                 $this->validateMinItems($data, $schema);
                 $this->validateMaxItems($data, $schema);
                 $this->validateUniqueItems($data, $schema);
+
+                $this->removeAdditionalItems($data, $schema);
                 break;
             }
         }
@@ -1014,6 +1018,41 @@ class Validator
     }
 
     /**
+     * Remove additional properties
+     * @param object $data
+     * @param Schema $schema
+     * @throws SchemaException
+     */
+    protected function removeAdditionalProperties(object &$data, Schema $schema): void
+    {
+        // Check exists
+        if (property_exists($schema->getSchema(), 'additionalProperties')) {
+            return;
+        }
+
+        // Check is the flag allowed
+        if (($this->mode & self::MODE_REMOVE_ADDITIONALS) !== self::MODE_REMOVE_ADDITIONALS) {
+            return;
+        }
+
+        // Collect allowed properties
+        $allowedProperties = [];
+
+        if (property_exists($schema->getSchema(), 'properties')) {
+            foreach ($schema->getSchema()->properties as $propertyKey => $propertySchema) {
+                $allowedProperties[] = $propertyKey;
+            }
+        }
+
+        // Remove additionals
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $allowedProperties)) {
+                unset($data->{$key});
+            }
+        }
+    }
+
+    /**
      * Validate items
      * @param array $data
      * @param Schema $schema
@@ -1204,5 +1243,33 @@ class Validator
                 $schema->getPath() . '/type'
             ));
         }
+    }
+
+    /**
+     * Remove additional items
+     * @param array $data
+     * @param Schema $schema
+     * @throws SchemaException
+     */
+    protected function removeAdditionalItems(array &$data, Schema $schema): void
+    {
+        // If additionalItems is added then remove additionals will be ignored
+        if (property_exists($schema->getSchema(), 'additionalItems')) {
+            return;
+        }
+
+        // Check is the flag allowed
+        if (($this->mode & self::MODE_REMOVE_ADDITIONALS) !== self::MODE_REMOVE_ADDITIONALS) {
+            return;
+        }
+
+        // Remove additionals
+        $allowedLength = 0;
+
+        if (property_exists($schema->getSchema(), 'items')) {
+            $allowedLength = count($schema->getSchema()->items);
+        }
+
+        $data = array_slice($data, 0, $allowedLength);
     }
 }

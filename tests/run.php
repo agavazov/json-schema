@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+use \FrontLayer\JsonSchema\Validator;
+use \FrontLayer\JsonSchema\Schema;
+use \FrontLayer\JsonSchema\ValidationException;
+use \FrontLayer\JsonSchema\SchemaException;
+
 require __DIR__ . './../vendor/autoload.php';
 
 class Tests
@@ -53,7 +58,7 @@ class Tests
      */
     public function __construct()
     {
-        $this->filters = (object)[]; // @todo move it to class body when PHP is ready for this syntax
+        $this->filters = (object)[];
 
         $this->isCli = PHP_SAPI === 'cli';
     }
@@ -77,7 +82,7 @@ class Tests
         $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
 
         foreach ($rii as $file) {
-            /* @var $file \SplFileInfo */
+            /* @var $file SplFileInfo */
 
             if (substr(dirname($file->getBasename()), 0, 1) === '_') {
                 continue;
@@ -205,7 +210,11 @@ class Tests
 
         if (!empty($test->modes) && is_array($test->modes)) {
             if (in_array('CAST', $test->modes)) {
-                $mode ^= \FrontLayer\JsonSchema\Validator::MODE_CAST;
+                $mode ^= Validator::MODE_CAST;
+            }
+
+            if (in_array('REMOVE_ADDITIONALS', $test->modes)) {
+                $mode ^= Validator::MODE_REMOVE_ADDITIONALS;
             }
         }
 
@@ -213,14 +222,14 @@ class Tests
         $exception = null;
 
         try {
-            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema);
-            $validator = new \FrontLayer\JsonSchema\Validator($mode);
+            $schema = new Schema($jsonSchema);
+            $validator = new Validator($mode);
             $data = property_exists($test, 'data') ? $test->data : null;
             $newData = $validator->validate($data, $schema);
             $testResult = true;
-        } catch (\FrontLayer\JsonSchema\ValidationException $exception) {
+        } catch (ValidationException $exception) {
             $testResult = false;
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->results(false, $description . ' (NON DATA EXCEPTION)', $file, $exception);
             return;
         }
@@ -256,13 +265,13 @@ class Tests
         $exception = null;
 
         try {
-            $schema = new \FrontLayer\JsonSchema\Schema($jsonSchema);
-            $validator = new \FrontLayer\JsonSchema\Validator();
+            $schema = new Schema($jsonSchema);
+            $validator = new Validator();
             $validator->validate('', $schema);
             $testResult = true;
-        } catch (\FrontLayer\JsonSchema\SchemaException $exception) {
+        } catch (SchemaException $exception) {
             $testResult = false;
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->results(true, '(SCHEMA | Valid because of "NON SCHEMA EXCEPTION") ' . $description, $file, $exception);
             return;
         }
@@ -277,7 +286,7 @@ class Tests
      * @param string|null $file
      * @param Exception|null $exception
      */
-    public function results(bool $success, string $description, string $file = null, ?\Exception $exception = null): void
+    public function results(bool $success, string $description, string $file = null, ?Exception $exception = null): void
     {
         if ($this->showOnly !== self::SHOW_ALL) {
             if ($this->showOnly === self::SHOW_SUCCESS && $success == !true) {

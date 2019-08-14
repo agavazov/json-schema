@@ -21,13 +21,9 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 - Well documented
 
 ## What remains to be done `@todo`
-- Complete `MODE_REMOVE_ADDITIONALS`
-- Complete: `default`
-- Add develop branch & start using Git-Flow 
 - Complete: `refRemote`
 - Add versions for composer
 - Grammatically correct comments and exceptions
-- Add phpunit
 
 ## Installation
 
@@ -143,7 +139,7 @@ print 'SUCCESS';
 | Flag | Description |
 |------|-------------|
 | `Validator::MODE_CAST` | Cast the data to the specific format |
-| `Validator::MODE_REMOVE_ADDITIONALS` | Remove additional properties & additional items if they are not set to TRUE |
+| `Validator::MODE_REMOVE_ADDITIONALS` | Remove additional properties & additional items if they are not set to TRUE/FALSE |
 
 You can combine multiple flags with the bitwise operator `^`
 ```php

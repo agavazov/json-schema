@@ -1,0 +1,179 @@
+[
+    {
+        "description": "additionalProperties false",
+        "schema": {
+            "properties": {"foo": true, "bar": true},
+            "additionalProperties": false
+        },
+        "tests": [
+            {
+                "description": "valid additionalProperties",
+                "data": {
+                    "foo": 1,
+                    "bar": 2
+                },
+                "valid": true,
+                "expect": {"foo": 1, "bar": 2}
+            },
+            {
+                "description": "invalid extra additionalProperties",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "nonAllowed": 3
+                },
+                "valid": false
+            },
+            {
+                "description": "invalid extra additionalProperties (skip extra flag)",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "nonAllowed": 3
+                },
+                "valid": false,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "additionalProperties true",
+        "schema": {
+            "properties": {"foo": true, "bar": true},
+            "additionalProperties": true
+        },
+        "tests": [
+            {
+                "description": "valid extra additionalProperties",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "allowed": 3
+                },
+                "expect": {"foo": 1, "bar": 2, "allowed": 3},
+                "valid": true
+            },
+            {
+                "description": "valid extra additionalProperties (skip extra flag)",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "allowed": 3
+                },
+                "expect": {"foo": 1, "bar": 2, "allowed": 3},
+                "valid": true,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "additionalProperties without value",
+        "schema": {
+            "properties": {"foo": true, "bar": true}
+        },
+        "tests": [
+            {
+                "description": "valid extra additionalProperties",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "allowed": 3
+                },
+                "expect": {"foo": 1, "bar": 2, "allowed": 3},
+                "valid": true
+            },
+            {
+                "description": "valid extra additionalProperties - without additionals response",
+                "data": {
+                    "foo": 1,
+                    "bar": 2,
+                    "allowed": 3
+                },
+                "expect": {"foo": 1, "bar": 2},
+                "valid": true,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "additionalItems false",
+        "schema": {
+            "items": [true, true],
+            "additionalItems": false
+        },
+        "tests": [
+            {
+                "description": "valid additionalItems",
+                "data": [1, 2],
+                "valid": true,
+                "expect": [1, 2]
+            },
+            {
+                "description": "invalid extra additionalItems",
+                "data": [1, 2, 3],
+                "valid": false
+            },
+            {
+                "description": "invalid extra additionalItems (skip extra flag)",
+                "data": [1, 2, 3],
+                "valid": false,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "additionalItems true",
+        "schema": {
+            "items": [true, true],
+            "additionalItems": true
+        },
+        "tests": [
+            {
+                "description": "valid extra additionalItems",
+                "data": [1, 2, 3],
+                "expect": [1, 2, 3],
+                "valid": true
+            },
+            {
+                "description": "valid extra additionalItems (skip extra flag)",
+                "data": [1, 2, 3],
+                "expect": [1, 2, 3],
+                "valid": true,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    },
+    {
+        "description": "additionalItems without value",
+        "schema": {
+            "items": [true, true]
+        },
+        "tests": [
+            {
+                "description": "valid extra additionalItems",
+                "data": [1, 2, 3],
+                "expect": [1, 2, 3],
+                "valid": true
+            },
+            {
+                "description": "valid extra additionalItems - without additionals response",
+                "data": [1, 2, 3],
+                "expect": [1, 2],
+                "valid": true,
+                "modes": [
+                    "REMOVE_ADDITIONALS"
+                ]
+            }
+        ]
+    }
+]
