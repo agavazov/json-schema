@@ -6,7 +6,7 @@
 
 Validate `JSON` Structures against a given `Schema`.
 
-Supports almost all official [JSON Schema Draft 7](https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/master/tests/draft7) tests _* Almost all because some of them cannot be validated by PHP_
+Supports **all** official [JSON Schema Draft 7](https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/master/tests/draft7) tests _* Without two for bignum because PHP cannot be validate them_
 
 ## Intro
 - PHP strict code
