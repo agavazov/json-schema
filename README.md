@@ -23,7 +23,7 @@ Supports almost all official [JSON Schema Draft 7](https://github.com/json-schem
 ## What remains to be done `@todo`
 - Complete `MODE_REMOVE_ADDITIONALS`
 - Complete `MODE_APPLY_DEFAULTS`
-- Complete: `default`, `definitions`, `not`, `if/then/else`
+- Complete: `default`
 - Add develop branch & start using Git-Flow 
 - Complete: `refRemote`
 - Add versions for composer

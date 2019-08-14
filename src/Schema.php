@@ -6,6 +6,11 @@ namespace FrontLayer\JsonSchema;
 class Schema
 {
     /**
+     * External $ref timeout ms.
+     */
+    const CURL_TIMEOUT = 1000;
+
+    /**
      * Current object schema
      * @var bool|object
      */
@@ -258,14 +263,37 @@ class Schema
 
         // Check is URL
         if (Check::uri($ref)) {
-            // @todo add curl & timeout
-            $json = @file_get_contents($ref);
+            // Download external JSON
+            $ch = curl_init($ref);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_NOSIGNAL, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::CURL_TIMEOUT);
+            $data = curl_exec($ch);
+            $curlErrno = curl_errno($ch);
+            $curlError = curl_error($ch);
+            curl_close($ch);
 
-            if (is_string($json)) {
-                $json = json_decode($json);
-                new Schema($json, $ref, $this->references);
-                return $this->references->{$ref}->getSchema();
+            if ($curlErrno > 0) {
+                throw new SchemaException(sprintf(
+                    'External reference download problem: "%s" (%s)',
+                    $curlError,
+                    $this->getPath() . '/$ref'
+                ));
+            } else {
+                $json = json_decode($data);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new SchemaException(sprintf(
+                        'Invalid json response for $ref "%s" (%s)',
+                        $ref,
+                        $this->getPath() . '/$ref'
+                    ));
+                }
             }
+
+            $setPath = preg_replace('/.*\#/', '#', $ref);
+            new Schema($json, $setPath, $this->references);
+            return $this->references->{$setPath}->getSchema();
         }
 
         throw new SchemaException(sprintf(
