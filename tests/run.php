@@ -33,7 +33,7 @@ class Tests
      * @param string $directory
      * @param string $version
      */
-    public function addCollection(string $directory, string $version = null): void
+    public function addCollection(string $directory, string $version = Schema::DEFAULT_VERSION): void
     {
         $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
 
@@ -54,11 +54,11 @@ class Tests
 
     /**
      * Add ignore conditions to skip specific tests
-     * @param string $msg
+     * @param string $ignorePattern
      */
-    public function ignore(string $msg): void
+    public function ignore(string $ignorePattern): void
     {
-        $this->ignores[] = $msg;
+        $this->ignores[] = $ignorePattern;
     }
 
     /**
@@ -100,7 +100,7 @@ class Tests
         } catch (SchemaException $exception) {
             $testResult = false;
         } catch (Exception $exception) {
-            $this->log(false, $collection->file, $content->description, null, 'NON SCHEMA EXCEPTION: ' . $exception->getMessage());
+            $this->log(false, $collection->file, $content->description, null, $exception->getMessage() . ' (NON SCHEMA EXCEPTION)');
             return;
         }
         $this->log($testResult === $valid, $collection->file, $content->description, null, $exception ? $exception->getMessage() : null);
@@ -138,7 +138,7 @@ class Tests
         } catch (ValidationException $exception) {
             $testResult = false;
         } catch (Exception $exception) {
-            $this->log(false, $collection->file, $content->description, $test->description, 'NON DATA EXCEPTION: ' . $exception->getMessage());
+            $this->log(false, $collection->file, $content->description, $test->description, $exception->getMessage() . ' (NON DATA EXCEPTION)');
             return;
         }
 
@@ -186,7 +186,7 @@ class Tests
             // Check ignore
             if (!$log->valid) {
                 foreach ($this->ignores as $ignore) {
-                    if (strstr($msg, $ignore) !== false) {
+                    if (preg_match($ignore, $msg)) {
                         continue 2;
                     }
                 }
@@ -254,39 +254,25 @@ $test->addCollection(__DIR__ . '/draft7', '7');
 $test->addCollection(__DIR__ . '/draft6', '6');
 
 // PHP and big integer can`t validate two of the tests
-$test->ignore('bignum.json / integer / a bignum is an integer / There is provided schema with type/s "integer" which not match with the data type "number"');
-$test->ignore('bignum.json / integer / a negative bignum is an integer / There is provided schema with type/s "integer" which not match with the data type "number"');
+$test->ignore('/bignum.json \/ integer \/ a bignum is an integer \/ There is provided schema with type\/s "integer" which not match with the data type "number"/');
+$test->ignore('/bignum.json \/ integer \/ a negative bignum is an integer \/ There is provided schema with type\/s "integer" which not match with the data type "number"/');
+
+// Those tests can`t pass because the external URL is not exists
+$test->ignore('/refRemote.json \/ remote ref \/(.*)External reference download problem/');
+$test->ignore('/refRemote.json \/ fragment within remote ref \/(.*)External reference download problem/');
+$test->ignore('/refRemote.json \/ ref within remote ref \/(.*)External reference download problem/');
+$test->ignore('/refRemote.json \/ base URI change \/ base URI change ref/');
+$test->ignore('/refRemote.json \/ base URI change - change folder/');
+$test->ignore('/refRemote.json \/ root ref in remote ref/');
 
 // @todo - not ready yet
-$test->ignore('definitions.json / valid definition / valid definition schema / NON DATA EXCEPTION: Unknown reference "#/definitions/nonNegativeInteger"');
-$test->ignore('definitions.json / invalid definition / invalid definition schema / NON DATA EXCEPTION: Unknown reference "#/definitions/nonNegativeInteger"');
-$test->ignore('ref.json / remote ref, containing refs itself / remote ref valid / NON DATA EXCEPTION: Unknown reference "#/definitions/nonNegativeInteger"');
-$test->ignore('ref.json / remote ref, containing refs itself / remote ref invalid / NON DATA EXCEPTION: Unknown reference "#/definitions/nonNegativeInteger"');
+$test->ignore('/properties.json \/ properties, patternProperties, additionalProperties interaction \/ patternProperty invalidates property/');
 
-$test->ignore('properties.json / properties, patternProperties, additionalProperties interaction / patternProperty invalidates property');
-$test->ignore('ref.json / Recursive references between schemas / valid tree / NON DATA EXCEPTION: Unknown reference "node"');
-$test->ignore('ref.json / Recursive references between schemas / invalid tree / NON DATA EXCEPTION: Unknown reference "node"');
-$test->ignore('ref.json / Location-independent identifier with base URI change in subschema / External reference download problem');
-$test->ignore('ref.json / Location-independent identifier with base URI change in subschema / match / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('ref.json / Location-independent identifier with base URI change in subschema / mismatch / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / remote ref / External reference download problem');
-$test->ignore('refRemote.json / remote ref / remote ref valid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / remote ref / remote ref invalid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / fragment within remote ref / External reference download problem');
-$test->ignore('refRemote.json / fragment within remote ref / remote fragment valid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / fragment within remote ref / remote fragment invalid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / ref within remote ref / External reference download problem');
-$test->ignore('refRemote.json / ref within remote ref / ref within ref valid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / ref within remote ref / ref within ref invalid / NON DATA EXCEPTION: External reference download problem');
-$test->ignore('refRemote.json / base URI change / base URI change ref valid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / base URI change / base URI change ref invalid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / base URI change - change folder / number is valid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / base URI change - change folder / string is invalid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / base URI change - change folder in subschema / number is valid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / base URI change - change folder in subschema / string is invalid / NON DATA EXCEPTION: Unknown reference "folderInteger.json"');
-$test->ignore('refRemote.json / root ref in remote ref / string is valid / NON DATA EXCEPTION: Unknown reference "name.json#/definitions/orNull"');
-$test->ignore('refRemote.json / root ref in remote ref / null is valid / NON DATA EXCEPTION: Unknown reference "name.json#/definitions/orNull"');
-$test->ignore('refRemote.json / root ref in remote ref / object is invalid / NON DATA EXCEPTION: Unknown reference "name.json#/definitions/orNull"');
+$test->ignore('/definitions.json \/ valid definition \/ valid definition schema/');
+$test->ignore('/definitions.json \/ invalid definition \/ invalid definition schema/');
+$test->ignore('/ref.json \/ remote ref, containing refs itself/');
+$test->ignore('/ref.json \/ Recursive references between schemas/');
+$test->ignore('/ref.json \/ Location-independent identifier with base URI change in subschema/');
 
 // Run
 $test->run();

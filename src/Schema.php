@@ -6,6 +6,11 @@ namespace FrontLayer\JsonSchema;
 class Schema
 {
     /**
+     * Set default json schema version
+     */
+    const DEFAULT_VERSION = '7';
+
+    /**
      * External $ref timeout ms.
      */
     const CURL_TIMEOUT = 1000;
@@ -42,7 +47,7 @@ class Schema
      * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, string $version = '7', string $path = '#/', object $references = null)
+    public function __construct($schema, string $version = self::DEFAULT_VERSION, string $path = '#/', object $references = null)
     {
         // Set path
         $this->path = $path;
