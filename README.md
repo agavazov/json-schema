@@ -23,7 +23,7 @@ _* Without two for bignum because PHP cannot validate them_
 - Well documented
 
 ## What remains to be done `@todo`
-- Complete: `refRemote`
+- Complete: `refRemote` and few tests with `ref`
 - Add versions for composer
 - Grammatically correct comments and exceptions
 

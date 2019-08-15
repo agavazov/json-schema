@@ -217,7 +217,7 @@ class Validator
                 'There is provided schema with type/s "%s" which not match with the data type "%s" (%s)',
                 implode(';', $schema->getSchema()->type),
                 $dataType,
-                $schema->getPath() . '/type'
+                $schema->getPath('type')
             ));
         }
     }
@@ -242,7 +242,7 @@ class Validator
             throw new SchemaException(sprintf(
                 'Unknown format "%s" (%s)',
                 $format,
-                $schema->getPath() . '/format'
+                $schema->getPath('format')
             ));
         }
 
@@ -252,7 +252,7 @@ class Validator
             throw new ValidationException(sprintf(
                 'Provided data is not validated with format "%s" (%s)',
                 $format,
-                $schema->getPath() . '/format'
+                $schema->getPath('format')
             ));
         }
     }
@@ -314,7 +314,7 @@ class Validator
         }
 
         throw new ValidationException(sprintf(
-            $schema->getPath() . '/const'
+            $schema->getPath('const')
         ));
     }
 
@@ -341,7 +341,7 @@ class Validator
         throw new ValidationException(sprintf(
             'Non of provided "%d" enums matches with the provided data (%s)',
             count($schema->getSchema()->enum),
-            $schema->getPath() . '/enum'
+            $schema->getPath('enum')
         ));
     }
 
@@ -466,7 +466,7 @@ class Validator
                 'Min length is "%s" but your string is with "%s" (%s)',
                 $schema->getSchema()->minLength,
                 strlen($data),
-                $schema->getPath() . '/minLength'
+                $schema->getPath('minLength')
             ));
         }
     }
@@ -491,7 +491,7 @@ class Validator
                 'Max length is "%s" but your string is with "%s" (%s)',
                 $schema->getSchema()->maxLength,
                 strlen($data),
-                $schema->getPath() . '/maxLength'
+                $schema->getPath('maxLength')
             ));
         }
     }
@@ -515,7 +515,7 @@ class Validator
             throw new ValidationException(sprintf(
                 'Pattern "%s" not match with the input data (%s)',
                 $schema->getSchema()->pattern,
-                $schema->getPath() . '/pattern'
+                $schema->getPath('pattern')
             ));
         }
     }
@@ -548,7 +548,7 @@ class Validator
             throw new ValidationException(sprintf(
                 'The data can`t be encoded by "%d" (%s)',
                 $schema->getSchema()->contentEncoding,
-                $schema->getPath() . '/contentEncoding'
+                $schema->getPath('contentEncoding')
             ));
         } else {
             $data = $encoded;
@@ -587,7 +587,7 @@ class Validator
             throw new ValidationException(sprintf(
                 'The input data is not does not validated with content type "%s" (%s)',
                 $schema->getSchema()->contentMediaType,
-                $schema->getPath() . '/contentMediaType'
+                $schema->getPath('contentMediaType')
             ));
         }
     }
@@ -633,7 +633,7 @@ class Validator
                 'You have value "%s" which is not multiple of "%s" (%s)',
                 $number,
                 $schema->getSchema()->multipleOf,
-                $schema->getPath() . '/multipleOf'
+                $schema->getPath('multipleOf')
             ));
         }
     }
@@ -658,7 +658,7 @@ class Validator
                 'Min value is "%d" but your number is with value "%d" (%s)',
                 $schema->getSchema()->minimum,
                 $data,
-                $schema->getPath() . '/minimum'
+                $schema->getPath('minimum')
             ));
         }
     }
@@ -683,7 +683,7 @@ class Validator
                 'Max value is "%d" but your number is with value "%d" (%s)',
                 $schema->getSchema()->maximum,
                 $data,
-                $schema->getPath() . '/maximum'
+                $schema->getPath('maximum')
             ));
         }
     }
@@ -708,7 +708,7 @@ class Validator
                 'Exclusive minimum value is "%d" but your number is with value "%d" (%s)',
                 $schema->getSchema()->exclusiveMinimum,
                 $data,
-                $schema->getPath() . '/exclusiveMinimum'
+                $schema->getPath('exclusiveMinimum')
             ));
         }
     }
@@ -733,7 +733,7 @@ class Validator
                 'Exclusive maximum value is "%d" but your number is with value "%d" (%s)',
                 $schema->getSchema()->exclusiveMaximum,
                 $data,
-                $schema->getPath() . '/exclusiveMaximum'
+                $schema->getPath('exclusiveMaximum')
             ));
         }
     }
@@ -811,7 +811,7 @@ class Validator
                 throw new ValidationException(sprintf(
                     'Object property with key "%d" is not declared in properties map (%s)',
                     $key,
-                    $schema->getPath() . '/properties'
+                    $schema->getPath('properties')
                 ));
             }
         }
@@ -882,7 +882,7 @@ class Validator
                 throw new ValidationException(sprintf(
                     'You have missing property key "%s" (%s)',
                     $required,
-                    $schema->getPath() . '/required'
+                    $schema->getPath('required')
                 ));
             }
         }
@@ -927,7 +927,7 @@ class Validator
                 'Min properties are "%s" but your object contains "%s" properties (%s)',
                 $schema->getSchema()->minProperties,
                 count((array)$data),
-                $schema->getPath() . '/minProperties'
+                $schema->getPath('minProperties')
             ));
         }
     }
@@ -952,7 +952,7 @@ class Validator
                 'Max properties are "%s" but your object contains "%s" properties (%s)',
                 $schema->getSchema()->maxProperties,
                 count((array)$data),
-                $schema->getPath() . '/maxProperties'
+                $schema->getPath('maxProperties')
             ));
         }
     }
@@ -1085,7 +1085,7 @@ class Validator
                     throw new ValidationException(sprintf(
                         'Array item with key "%d" is not declared in tuple item list (%s)',
                         $key,
-                        $schema->getPath() . '/items'
+                        $schema->getPath('items')
                     ));
                 }
             } else {
@@ -1179,7 +1179,7 @@ class Validator
                 'Min items are "%s" but your array contains "%s" items (%s)',
                 $schema->getSchema()->minItems,
                 count($data),
-                $schema->getPath() . '/minItems'
+                $schema->getPath('minItems')
             ));
         }
     }
@@ -1204,7 +1204,7 @@ class Validator
                 'Max items are "%s" but your array contains "%s" items (%s)',
                 $schema->getSchema()->maxItems,
                 count($data),
-                $schema->getPath() . '/maxItems'
+                $schema->getPath('maxItems')
             ));
         }
     }
@@ -1240,7 +1240,7 @@ class Validator
         if ($itemsLength !== count(array_count_values($tmp))) {
             throw new ValidationException(sprintf(
                 'You have value array which contains non unique values (%s)',
-                $schema->getPath() . '/type'
+                $schema->getPath('type')
             ));
         }
     }
