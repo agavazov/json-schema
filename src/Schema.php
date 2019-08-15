@@ -913,6 +913,8 @@ class Schema
                         ));
                     }
                 }
+
+                break;
             }
             case '4':
             {
@@ -923,6 +925,8 @@ class Schema
                         $this->getPath('/exclusiveMinimum')
                     ));
                 }
+
+                break;
             }
         }
     }
@@ -976,6 +980,8 @@ class Schema
                         ));
                     }
                 }
+
+                break;
             }
             case '4':
             {
@@ -986,6 +992,8 @@ class Schema
                         $this->getPath('/exclusiveMaximum')
                     ));
                 }
+
+                break;
             }
         }
     }

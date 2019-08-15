@@ -724,6 +724,8 @@ class Validator
                         $schema->getPath('exclusiveMinimum')
                     ));
                 }
+
+                break;
             }
             case '4':
             {
@@ -737,6 +739,8 @@ class Validator
                         ));
                     }
                 }
+
+                break;
             }
         }
     }
@@ -768,6 +772,8 @@ class Validator
                         $schema->getPath('exclusiveMaximum')
                     ));
                 }
+
+                break;
             }
             case '4':
             {
@@ -781,6 +787,8 @@ class Validator
                         ));
                     }
                 }
+
+                break;
             }
         }
     }
