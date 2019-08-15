@@ -17,6 +17,12 @@ class Schema
     protected $schema;
 
     /**
+     * Current json schema version
+     * @var string
+     */
+    protected $version;
+
+    /**
      * Storage with all paths
      * @var object
      */
@@ -31,14 +37,18 @@ class Schema
     /**
      * Schema constructor.
      * @param object|bool $schema
+     * @param string $version
      * @param string|null $path
      * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, string $path = '#/', object $references = null)
+    public function __construct($schema, string $version = '7', string $path = '#/', object $references = null)
     {
         // Set path
         $this->path = $path;
+
+        // Set version
+        $this->version = $version;
 
         // Register current schema
         $this->references = $references ?: (object)[];
@@ -155,6 +165,15 @@ class Schema
     }
 
     /**
+     * Return current json schema version
+     * @return string
+     */
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
+
+    /**
      * Return current schema path
      * @return string
      */
@@ -188,7 +207,7 @@ class Schema
         $newPath .= implode('/', $nesting);
 
         // Create (sub-)schema object
-        $schema = new Schema($schema, $newPath, $this->references);
+        $schema = new Schema($schema, $this->version, $newPath, $this->references);
     }
 
     /**
@@ -252,7 +271,7 @@ class Schema
                     $this->references->{$ref} = $tmp;
                 } else {
                     // Register it in references
-                    new Schema($tmp, $ref, $this->references);
+                    new Schema($tmp, $this->version, $ref, $this->references);
                 }
 
                 return $this->references->{$ref}->getSchema();
@@ -292,7 +311,7 @@ class Schema
             }
 
             $setPath = preg_replace('/.*#/', '#', $ref);
-            new Schema($json, $setPath, $this->references);
+            new Schema($json, $this->version, $setPath, $this->references);
             return $this->references->{$setPath}->getSchema();
         }
 

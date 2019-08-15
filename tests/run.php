@@ -93,7 +93,7 @@ class Tests
         $valid = property_exists($content, 'tests') ? true : $content->valid;
 
         try {
-            $schema = new Schema($content->schema);
+            $schema = new Schema($content->schema, $collection->version);
             $validator = new Validator();
             $validator->validate('', $schema);
             $testResult = true;
@@ -132,7 +132,7 @@ class Tests
         $exception = null;
 
         try {
-            $schema = new Schema($content->schema);
+            $schema = new Schema($content->schema, $collection->version);
             $validator = new Validator($mode);
             $data = property_exists($test, 'data') ? $test->data : null;
             $newData = $validator->validate($data, $schema);
@@ -250,6 +250,7 @@ class Tests
 // Start the test
 $test = new Tests();
 $test->addCollection(__DIR__ . '/draft7', '7');
+$test->addCollection(__DIR__ . '/draft6', '6');
 
 // PHP and big integer can`t validate two of the tests
 $test->ignore('bignum.json / integer / a bignum is an integer / There is provided schema with type/s "integer" which not match with the data type "number"');
