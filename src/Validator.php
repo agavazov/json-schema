@@ -239,7 +239,7 @@ class Validator
         $format = $schema->getSchema()->format;
 
         if (!property_exists($this->formats, $format)) {
-            throw new ValidationException(sprintf(
+            throw new SchemaException(sprintf(
                 'Unknown format "%s" (%s)',
                 $format,
                 $schema->getPath() . '/format'

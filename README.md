@@ -16,7 +16,7 @@ _* Without two for bignum because PHP cannot validate them_
     - Strict mode `declare(strict_types=1);`
     - Return types `: void, : bool, : string, ...`
     - Method arguments types `bool $isSomething, string $someValue`
-- More than 750 tests
+- More than 1000 tests
 - Support data casts e.g. for data from query/post/url paths
 - Register custom formats
 - Clean code
@@ -148,7 +148,7 @@ You can combine multiple flags with the bitwise operator `^`
 $validator->validate($data, $schema, Validator::MODE_CAST ^ Validator::MODE_REMOVE_ADDITIONALS)
 ```
 
-## Test the project with more than 750 tests
+## Test the project with all official & custom tests
 
 ```bash
 composer run test

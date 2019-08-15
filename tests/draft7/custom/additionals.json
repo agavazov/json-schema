@@ -3,6 +3,7 @@
         "description": "additionalProperties false",
         "schema": {
             "properties": {"foo": true, "bar": true},
+			"data": null,
             "additionalProperties": false
         },
         "tests": [

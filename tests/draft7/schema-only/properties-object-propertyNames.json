@@ -8,10 +8,5 @@
         "description": "object schema - propertyNames with wrong pattern",
         "schema": {"type": "object", "propertyNames": {"pattern": "wrong //\\ patern"}},
         "valid": false
-    },
-    {
-        "description": "object schema - propertyNames with type mismatch",
-        "schema": {"type": "object", "propertyNames": {"type": "number", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"}},
-        "valid": false
     }
 ]
