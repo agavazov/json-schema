@@ -252,6 +252,7 @@ class Tests
 $test = new Tests();
 $test->addCollection(__DIR__ . '/draft7', '7');
 $test->addCollection(__DIR__ . '/draft6', '6');
+$test->addCollection(__DIR__ . '/draft4', '4');
 
 // PHP and big integer can`t validate two of the tests
 $test->ignore('/bignum.json \/ integer \/ a bignum is an integer \/ There is provided schema with type\/s "integer" which not match with the data type "number"/');
@@ -266,6 +267,9 @@ $test->ignore('/refRemote.json \/ base URI change - change folder/');
 $test->ignore('/refRemote.json \/ root ref in remote ref/');
 
 // @todo - not ready yet
+$test->ignore('/draft4\/custom\/openapi-petstore.json/');
+$test->ignore('/draft4\/official\/ref.json/');
+$test->ignore('/draft4\/official\/optional\/zeroTerminatedFloats.json \/ some languages do not distinguish between different types of numeric value \/ a float is not an integer even without fractional part/');
 $test->ignore('/properties.json \/ properties, patternProperties, additionalProperties interaction \/ patternProperty invalidates property/');
 
 $test->ignore('/definitions.json \/ valid definition \/ valid definition schema/');

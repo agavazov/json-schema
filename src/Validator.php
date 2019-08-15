@@ -389,7 +389,10 @@ class Validator
             }
         }
 
-        throw new ValidationException('There is no match with "anyOf" schema');
+        throw new ValidationException(sprintf(
+            'There is no match with "anyOf" schema (%s)',
+            $schema->getPath()
+        ));
     }
 
     /**
@@ -419,7 +422,10 @@ class Validator
         }
 
         if ($success !== 1) {
-            throw new ValidationException('There is no match with "anyOf" schema');
+            throw new ValidationException(sprintf(
+                'There is no match (%s)',
+                $schema->getPath('oneOf')
+            ));
         }
     }
 
@@ -443,7 +449,10 @@ class Validator
             return;
         }
 
-        throw new ValidationException('Validation was successful, but "not" condition requires the opposite');
+        throw new ValidationException(sprintf(
+            'Validation was successful, but "not" condition requires the opposite (%s)',
+            $schema->getPath('not')
+        ));
     }
 
     /**
@@ -702,14 +711,33 @@ class Validator
             return;
         }
 
-        // Check number value
-        if ($data <= $schema->getSchema()->exclusiveMinimum) {
-            throw new ValidationException(sprintf(
-                'Exclusive minimum value is "%d" but your number is with value "%d" (%s)',
-                $schema->getSchema()->exclusiveMinimum,
-                $data,
-                $schema->getPath('exclusiveMinimum')
-            ));
+        // Check by version
+        switch ($schema->getVersion()) {
+            case '6':
+            case '7':
+            {
+                if ($data <= $schema->getSchema()->exclusiveMinimum) {
+                    throw new ValidationException(sprintf(
+                        'Exclusive minimum value is "%d" but your number is with value "%d" (%s)',
+                        $schema->getSchema()->exclusiveMinimum,
+                        $data,
+                        $schema->getPath('exclusiveMinimum')
+                    ));
+                }
+            }
+            case '4':
+            {
+                if ($schema->getSchema()->exclusiveMinimum === true && property_exists($schema->getSchema(), 'minimum')) {
+                    if ($data <= $schema->getSchema()->minimum) {
+                        throw new ValidationException(sprintf(
+                            'Exclusive minimum value is "%d" but your number is with value "%d" (%s)',
+                            $schema->getSchema()->minimum,
+                            $data,
+                            $schema->getPath('exclusiveMinimum')
+                        ));
+                    }
+                }
+            }
         }
     }
 
@@ -727,14 +755,33 @@ class Validator
             return;
         }
 
-        // Check number value
-        if ($data >= $schema->getSchema()->exclusiveMaximum) {
-            throw new ValidationException(sprintf(
-                'Exclusive maximum value is "%d" but your number is with value "%d" (%s)',
-                $schema->getSchema()->exclusiveMaximum,
-                $data,
-                $schema->getPath('exclusiveMaximum')
-            ));
+        // Check by version
+        switch ($schema->getVersion()) {
+            case '6':
+            case '7':
+            {
+                if ($data >= $schema->getSchema()->exclusiveMaximum) {
+                    throw new ValidationException(sprintf(
+                        'Exclusive maximum value is "%d" but your number is with value "%d" (%s)',
+                        $schema->getSchema()->exclusiveMaximum,
+                        $data,
+                        $schema->getPath('exclusiveMaximum')
+                    ));
+                }
+            }
+            case '4':
+            {
+                if ($schema->getSchema()->exclusiveMaximum === true && property_exists($schema->getSchema(), 'maximum')) {
+                    if ($data >= $schema->getSchema()->maximum) {
+                        throw new ValidationException(sprintf(
+                            'Exclusive maximum value is "%d" but your number is with value "%d" (%s)',
+                            $schema->getSchema()->maximum,
+                            $data,
+                            $schema->getPath('exclusiveMaximum')
+                        ));
+                    }
+                }
+            }
         }
     }
 
@@ -1119,7 +1166,10 @@ class Validator
             }
         }
 
-        throw new ValidationException('ok');
+        throw new ValidationException(sprintf(
+            'There is no match with contains conditions (%s)',
+            $schema->getPath('contains')
+        ));
     }
 
     /**

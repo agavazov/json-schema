@@ -886,24 +886,43 @@ class Schema
         }
 
         // Check for valid property type
-        if (!is_double($this->schema->exclusiveMinimum) && !is_integer($this->schema->exclusiveMinimum)) {
-            throw new SchemaException(sprintf(
-                'You have "exclusiveMinimum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->schema->exclusiveMinimum),
-                $this->getPath('/exclusiveMinimum')
-            ));
-        }
+        $propertyType = gettype($this->schema->exclusiveMinimum);
 
-        // Minimum checks
-        if (property_exists($this->schema, 'minimum')) {
-            // Check is exclusiveMinimum lower than minimum
-            if ($this->schema->exclusiveMinimum < $this->schema->minimum) {
-                throw new SchemaException(sprintf(
-                    'You have "exclusiveMinimum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
-                    $this->schema->exclusiveMinimum,
-                    $this->schema->minimum,
-                    $this->getPath('/exclusiveMinimum')
-                ));
+        switch ($this->getVersion()) {
+            case '6':
+            case '7':
+            {
+                // Check for valid property type
+                if (!is_double($this->schema->exclusiveMinimum) && !is_integer($this->schema->exclusiveMinimum)) {
+                    throw new SchemaException(sprintf(
+                        'You have "exclusiveMinimum" which value is not a "number/integer" but it is "%s" (%s)',
+                        gettype($this->schema->exclusiveMinimum),
+                        $this->getPath('/exclusiveMinimum')
+                    ));
+                }
+
+                // Minimum checks
+                if (property_exists($this->schema, 'minimum')) {
+                    // Check is exclusiveMinimum lower than minimum
+                    if ($this->schema->exclusiveMinimum < $this->schema->minimum) {
+                        throw new SchemaException(sprintf(
+                            'You have "exclusiveMinimum" with value "%d" which is lower than "minimum" with value "%d" (%s)',
+                            $this->schema->exclusiveMinimum,
+                            $this->schema->minimum,
+                            $this->getPath('/exclusiveMinimum')
+                        ));
+                    }
+                }
+            }
+            case '4':
+            {
+                if ($propertyType !== 'boolean') {
+                    throw new SchemaException(sprintf(
+                        'You have "exclusiveMinimum" which value is not a "boolean" but it is "%s" (%s)',
+                        gettype($this->schema->exclusiveMinimum),
+                        $this->getPath('/exclusiveMinimum')
+                    ));
+                }
             }
         }
     }
@@ -920,34 +939,53 @@ class Schema
         }
 
         // Check for valid property type
-        if (!is_double($this->schema->exclusiveMaximum) && !is_integer($this->schema->exclusiveMaximum)) {
-            throw new SchemaException(sprintf(
-                'You have "exclusiveMaximum" which value is not a "number/integer" but it is "%s" (%s)',
-                gettype($this->schema->exclusiveMaximum),
-                $this->getPath('/exclusiveMaximum')
-            ));
-        }
+        $propertyType = gettype($this->schema->exclusiveMaximum);
 
-        // exclusiveMinimum checks
-        if (property_exists($this->schema, 'exclusiveMinimum')) {
-            // Check is exclusiveMaximum lower than exclusiveMinimum
-            if ($this->schema->exclusiveMaximum < $this->schema->exclusiveMinimum) {
-                throw new SchemaException(sprintf(
-                    'You have "exclusiveMaximum" with value "%d" which is lower than "exclusiveMinimum" with value "%d" (%s)',
-                    $this->schema->exclusiveMaximum,
-                    $this->schema->exclusiveMinimum,
-                    $this->getPath('/exclusiveMaximum')
-                ));
+        switch ($this->getVersion()) {
+            case '6':
+            case '7':
+            {
+                // Check for valid property type
+                if (!is_double($this->schema->exclusiveMaximum) && !is_integer($this->schema->exclusiveMaximum)) {
+                    throw new SchemaException(sprintf(
+                        'You have "exclusiveMaximum" which value is not a "number/integer" but it is "%s" (%s)',
+                        gettype($this->schema->exclusiveMaximum),
+                        $this->getPath('/exclusiveMaximum')
+                    ));
+                }
+
+                // exclusiveMinimum checks
+                if (property_exists($this->schema, 'exclusiveMinimum')) {
+                    // Check is exclusiveMaximum lower than exclusiveMinimum
+                    if ($this->schema->exclusiveMaximum < $this->schema->exclusiveMinimum) {
+                        throw new SchemaException(sprintf(
+                            'You have "exclusiveMaximum" with value "%d" which is lower than "exclusiveMinimum" with value "%d" (%s)',
+                            $this->schema->exclusiveMaximum,
+                            $this->schema->exclusiveMinimum,
+                            $this->getPath('/exclusiveMaximum')
+                        ));
+                    }
+
+                    // Check is exclusiveMaximum equal to exclusiveMinimum
+                    if ($this->schema->exclusiveMaximum == $this->schema->exclusiveMinimum) {
+                        throw new SchemaException(sprintf(
+                            'You have "exclusiveMaximum" with value "%d" which is equal to "exclusiveMinimum" with value "%d" (%s)',
+                            $this->schema->exclusiveMaximum,
+                            $this->schema->exclusiveMinimum,
+                            $this->getPath('/exclusiveMaximum')
+                        ));
+                    }
+                }
             }
-
-            // Check is exclusiveMaximum equal to exclusiveMinimum
-            if ($this->schema->exclusiveMaximum == $this->schema->exclusiveMinimum) {
-                throw new SchemaException(sprintf(
-                    'You have "exclusiveMaximum" with value "%d" which is equal to "exclusiveMinimum" with value "%d" (%s)',
-                    $this->schema->exclusiveMaximum,
-                    $this->schema->exclusiveMinimum,
-                    $this->getPath('/exclusiveMaximum')
-                ));
+            case '4':
+            {
+                if ($propertyType !== 'boolean') {
+                    throw new SchemaException(sprintf(
+                        'You have "exclusiveMaximum" which value is not a "booleanbool" but it is "%s" (%s)',
+                        gettype($this->schema->exclusiveMaximum),
+                        $this->getPath('/exclusiveMaximum')
+                    ));
+                }
             }
         }
     }
