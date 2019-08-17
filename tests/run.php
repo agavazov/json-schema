@@ -116,6 +116,8 @@ class Tests
     {
         $mode = 0;
 
+        $mode ^= Validator::MODE_APPLY_DEFAULTS;
+
         if (!empty($test->modes) && is_array($test->modes)) {
             if (in_array('CAST', $test->modes)) {
                 $mode ^= Validator::MODE_CAST;

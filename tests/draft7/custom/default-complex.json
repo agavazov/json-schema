@@ -1,0 +1,95 @@
+[
+    {
+        "description": "build week days from different conditions",
+        "schema": {
+            "properties": {
+                "week": {
+                    "properties": {
+                        "day1": {
+                            "default": "Monday"
+                        }
+                    },
+                    "if": {
+                        "type": "object"
+                    },
+                    "then": {
+                        "default": {
+                            "day2": "Thursday"
+                        }
+                    },
+                    "allOf": [
+                        {
+                            "properties": {
+                                "day2": {
+                                    "const": "Thursday"
+                                }
+                            },
+                            "default": {
+                                "day3": "Wednesday"
+                            }
+                        },
+                        {
+                            "properties": {
+                                "day3": {
+                                    "const": "Wednesday"
+                                }
+                            },
+                            "default": {
+                                "day4": "Tuesday"
+                            }
+                        }
+                    ],
+                    "anyOf": [
+                        {
+                            "properties": {
+                                "day4": {
+                                    "const": "Fail"
+                                }
+                            },
+                            "default": {
+                                "day5": "Fail"
+                            }
+                        },
+                        {
+                            "properties": {
+                                "day4": {
+                                    "const": "Tuesday"
+                                }
+                            },
+                            "default": {
+                                "day5": "Friday",
+                                "day6": "Saturday"
+                            }
+                        }
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "boolean",
+                            "default": {
+                                "day3": "Fail"
+                            }
+                        },
+                        {
+                            "properties": {
+                                "day6": {
+                                    "const": "Saturday"
+                                }
+                            },
+                            "default": {
+                                "day7": "Sunday"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "tests": [
+            {
+                "description": "different cases",
+                "valid": true,
+                "data": {"week": {}},
+                "expect": {"week": {"day1": "Monday", "day2": "Thursday", "day3": "Wednesday", "day4": "Tuesday", "day5": "Friday", "day6": "Saturday", "day7": "Sunday"}}
+            }
+        ]
+    }
+]

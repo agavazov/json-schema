@@ -16,6 +16,11 @@ class Validator
     const MODE_REMOVE_ADDITIONALS = 2;
 
     /**
+     * Apply default values to the data
+     */
+    const MODE_APPLY_DEFAULTS = 4;
+
+    /**
      * Registered formats
      * @var object
      */
@@ -92,14 +97,17 @@ class Validator
         if (property_exists($schema->getSchema(), 'default')) {
             // Unfortunately php does not support "undefined" so this is why "default" will be applied when data is null
             if ($data === null) {
+                $this->applyDefaults($data, $schema);
+
                 // When default is used the schema is always represent as true
-                return $schema->getSchema()->default;
+                return $data;
             }
         }
 
         // Validate
         $this->validateType($data, $schema);
         $this->validateFormat($data, $schema);
+
         $this->validateIfThenElse($data, $schema);
         $this->validateConst($data, $schema);
         $this->validateEnum($data, $schema);
@@ -131,6 +139,12 @@ class Validator
             case 'object':
             {
                 $this->validateProperties($data, $schema);
+
+                // Check is still object
+                if (!is_object($data)) {
+                    break;
+                }
+
                 $this->validateAdditionalProperties($data, $schema);
                 $this->validateRequired($data, $schema);
                 $this->validatePropertyNames($data, $schema);
@@ -276,6 +290,13 @@ class Validator
             return;
         }
 
+        // Temporary stop default applies
+        $applyDefaults = ($this->mode & self::MODE_APPLY_DEFAULTS) === self::MODE_APPLY_DEFAULTS;
+
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
         // Check if condition
         $ifSucceed = true;
         try {
@@ -284,14 +305,33 @@ class Validator
             $ifSucceed = false;
         }
 
+        // Condition dispatch
+        $applySchema = null;
+
         if ($ifSucceed) {
             if (property_exists($schema->getSchema(), 'then')) {
                 $this->validate($data, $schema->getSchema()->then);
+
+                // If THEN is successful we will use it to apply default values from it
+                $applySchema = $schema->getSchema()->then;
             }
         } else {
             if (property_exists($schema->getSchema(), 'else')) {
                 $this->validate($data, $schema->getSchema()->else);
+
+                // If ELSE is successful we will use it to apply default values from it
+                $applySchema = $schema->getSchema()->else;
             }
+        }
+
+        // Restore default applies
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
+        // Apply defaults 
+        if ($applyDefaults && $applySchema) {
+            $this->applyDefaults($data, $applySchema);
         }
     }
 
@@ -359,9 +399,43 @@ class Validator
             return;
         }
 
+        // Temporary stop default applies
+        $applyDefaults = ($this->mode & self::MODE_APPLY_DEFAULTS) === self::MODE_APPLY_DEFAULTS;
+
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
         // Check for full match
+        $successCount = 0;
+
         foreach ($schema->getSchema()->allOf as $subSchema) {
-            $this->validate($data, $subSchema);
+            try {
+                $this->validate($data, $subSchema);
+                $successCount++;
+            } catch (ValidationException $e) {
+                // do nothing
+            }
+        }
+
+        // Restore default applies
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
+        // Return error
+        if ($successCount !== count($schema->getSchema()->allOf)) {
+            throw new ValidationException(sprintf(
+                '"AllOf" expect %d condition/s to match but only %d succeed (%s)',
+                count($schema->getSchema()->allOf),
+                $successCount,
+                $schema->getPath('allOf')
+            ));
+        }
+
+        // Apply defaults 
+        foreach ($schema->getSchema()->allOf as $subSchema) {
+            $this->applyDefaults($data, $subSchema);
         }
     }
 
@@ -379,16 +453,39 @@ class Validator
             return;
         }
 
+        // Temporary stop default applies
+        $applyDefaults = ($this->mode & self::MODE_APPLY_DEFAULTS) === self::MODE_APPLY_DEFAULTS;
+
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
         // Check for any match
         foreach ($schema->getSchema()->anyOf as $subSchema) {
             try {
                 $this->validate($data, $subSchema);
+
+                // When one is succeed we can move on
+                // Restore default applies
+                if ($applyDefaults) {
+                    $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+                }
+
+                // Apply defaults 
+                $this->applyDefaults($data, $subSchema);
+
                 return;
             } catch (ValidationException $e) {
                 continue;
             }
         }
 
+        // Restore default applies
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
+        // Nothing is match
         throw new ValidationException(sprintf(
             'There is no match with "anyOf" schema (%s)',
             $schema->getPath()
@@ -409,23 +506,45 @@ class Validator
             return;
         }
 
+        // Temporary stop default applies
+        $applyDefaults = ($this->mode & self::MODE_APPLY_DEFAULTS) === self::MODE_APPLY_DEFAULTS;
+
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
         // Check for single match
-        $success = 0;
+        $applySchema = null;
+        $successCount = 0;
 
         foreach ($schema->getSchema()->oneOf as $subSchema) {
             try {
                 $this->validate($data, $subSchema);
-                $success++;
+
+                $applySchema = $subSchema;
+
+                $successCount++;
             } catch (ValidationException $e) {
                 continue;
             }
         }
 
-        if ($success !== 1) {
+        // Restore default applies
+        if ($applyDefaults) {
+            $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
+        }
+
+        // Check for one of condition
+        if ($successCount !== 1) {
             throw new ValidationException(sprintf(
                 'There is no match (%s)',
                 $schema->getPath('oneOf')
             ));
+        }
+
+        // Apply defaults
+        if ($applyDefaults && $applySchema) {
+            $this->applyDefaults($data, $applySchema);
         }
     }
 
@@ -809,26 +928,32 @@ class Validator
 
         // Apply default
         $skipDefaultValidations = [];
-        foreach ($schema->getSchema()->properties as $propertyKey => $propertySchema) {
-            /* @var $propertySchema Schema */
 
-            if (!is_object($propertySchema->getSchema())) {
-                continue;
+        if (($this->mode & self::MODE_APPLY_DEFAULTS) === self::MODE_APPLY_DEFAULTS) {
+            foreach ($schema->getSchema()->properties as $propertyKey => $propertySchema) {
+                /* @var $propertySchema Schema */
+
+                if (!is_object($propertySchema->getSchema())) {
+                    continue;
+                }
+
+                if (!property_exists($propertySchema->getSchema(), 'default')) {
+                    continue;
+                }
+
+                if (property_exists($data, $propertyKey)) {
+                    continue;
+                }
+
+                // Set value
+                $skipDefaultValidations[] = $propertyKey;
+                $data->{$propertyKey} = $propertySchema->getSchema()->default;
             }
+        }
 
-            if (!property_exists($propertySchema->getSchema(), 'default')) {
-                continue;
-            }
-
-            if (property_exists($data, $propertyKey)) {
-                continue;
-            }
-
-            // When default is used the schema is always represent as true
-            $skipDefaultValidations[] = $propertyKey;
-
-            // Set value
-            $data->{$propertyKey} = $propertySchema->getSchema()->default;
+        // Check is still object
+        if (!is_object($data)) {
+            return;
         }
 
         // Get additional properties
@@ -853,6 +978,7 @@ class Validator
 
             // Validate mapped properties
             if (property_exists($schema->getSchema()->properties, $key)) {
+                // Validate current property
                 $data->{$key} = $this->validate($propertyData, $schema->getSchema()->properties->{$key});
             } elseif (!$additionalProperties) {
                 // If the property matches patternProperties then its not an additional property
@@ -1329,5 +1455,35 @@ class Validator
         }
 
         $data = array_slice($data, 0, $allowedLength);
+    }
+
+    /**
+     * Apply default values from the schema
+     * @param $data
+     * @param Schema $schema
+     * @throws SchemaException
+     */
+    protected function applyDefaults(&$data, Schema $schema): void
+    {
+        // Is apply defaults allowed
+        if (($this->mode & self::MODE_APPLY_DEFAULTS) !== self::MODE_APPLY_DEFAULTS) {
+            return;
+        }
+
+        // Check for default property
+        if (!is_object($schema->getSchema())) {
+            return;
+        }
+
+        // Simple apply
+        if (property_exists($schema->getSchema(), 'default')) {
+            if (is_object($schema->getSchema()->default) && is_object($data)) {
+                foreach ($schema->getSchema()->default as $key => $value) {
+                    $data->{$key} = $value;
+                }
+            } else {
+                $data = $schema->getSchema()->default;
+            }
+        }
     }
 }
