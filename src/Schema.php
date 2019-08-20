@@ -11,11 +11,6 @@ class Schema
     const DEFAULT_VERSION = '7';
 
     /**
-     * External $ref timeout ms.
-     */
-    const CURL_TIMEOUT = 1000;
-
-    /**
      * Current object schema
      * @var bool|object
      */
@@ -28,10 +23,10 @@ class Schema
     protected $version;
 
     /**
-     * Storage with all paths
-     * @var object
+     * Reference registry
+     * @var Ref
      */
-    protected $references;
+    protected $_ref;
 
     /**
      * Current instance path
@@ -43,11 +38,11 @@ class Schema
      * Schema constructor.
      * @param object|bool $schema
      * @param string $version
+     * @param Ref $ref
      * @param string|null $path
-     * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, string $version = self::DEFAULT_VERSION, string $path = '#', object $references = null)
+    public function __construct($schema, string $version = self::DEFAULT_VERSION, Ref $ref = null, string $path = '#')
     {
         // Set path
         $this->path = $path;
@@ -55,33 +50,14 @@ class Schema
         // Set version
         $this->version = $version;
 
-        // Register current schema
-        $this->references = $references ?: (object)[];
-
-        // Break if there is registered path in the storage
-        if (isset($this->references->{$this->path})) {
-            return;
-        }
+        // Set reference registry
+        $this->_ref = $ref;
 
         // Get schema type
         $schemaType = gettype($schema);
 
         // Store current schema
-        if ($references === null && $schemaType === 'object') {
-            // The easiest way to cast all associative arrays to objects and to clone the 1st level schema
-            $this->schema = json_decode(json_encode($schema));
-        } else {
-            $this->schema = $schema;
-        }
-
-        // Register current reference in references path-map
-        $this->references->{$this->getPath()} = $this;
-
-        // Check for identification $id
-        if ($schemaType === 'object' && property_exists($this->schema, '$id')) {
-            // If there is $id then add it in references with "$" prefix to exclude conflicts with paths
-            $this->references->{'$' . $this->schema->{'$id'}} = $this;
-        }
+        $this->schema = $schema;
 
         // Check for valid property type
         if ($schemaType !== 'object' && $schemaType !== 'boolean') {
@@ -154,18 +130,10 @@ class Schema
 
     /**
      * Return current schema structure
-     * @param bool $skipExtendCheck
      * @return object|bool
-     * @throws SchemaException
      */
-    public function getSchema($skipExtendCheck = false)
+    public function getSchema()
     {
-        if (!$skipExtendCheck) {
-            if (is_object($this->schema) && property_exists($this->schema, '$ref') && is_string($this->schema->{'$ref'})) {
-                return $this->extend($this->schema->{'$ref'})->getSchema();
-            }
-        }
-
         return $this->schema;
     }
 
@@ -219,118 +187,20 @@ class Schema
         $newPath = $this->getPath(implode('/', $nesting));
 
         // Create (sub-)schema object
-        $schema = new Schema($schema, $this->version, $newPath, $this->references);
-    }
+//        if ($this->_ref->isReference($newPath)) {
+//            $schema = $this->_ref->getReferenceFor($newPath);
+//        } else {
+//            $schema = new Schema($schema, $this->version, $this->_ref, $newPath);
+//        }
 
-    /**
-     * Extend by reference
-     * @param $ref
-     * @return mixed
-     * @throws SchemaException
-     */
-    protected function extend(string $ref)
-    {
-        // Fix root $ref
-        if ($ref === '#') {
-            $ref = '#/';
+        // Temporary solution till the class is not refactored to work with the new recursive references
+        if (count(explode('/', $newPath)) > 100) {
+            $schema = new Schema(true, $this->version, $this->_ref, $newPath);
+            return;
         }
 
-        // Try quick extend by path
-        if (property_exists($this->references, $ref)) {
-            return $this->references->{$ref};
-        }
-
-        // Try to find by id (with "$" prefix)
-        if (property_exists($this->references, '$' . $ref)) {
-            return $this->references->{'$' . $ref};
-        }
-
-        // Try to find by path
-        if (!property_exists($this->references, $ref)) {
-            $hasMatch = true;
-
-            $refParts = explode('/', $ref);
-
-            if (substr($ref, 0, 2) === '#/') {
-                array_shift($refParts);
-            }
-
-            $tmp = $this->references->{'#/'}->getSchema(true);
-
-            foreach ($refParts as $part) {
-                $part = str_replace(['~0', '~1', '%25', '%22'], ['~', '/', '%', '"'], $part);
-
-                if ($tmp instanceof Schema) {
-                    $tmp = $tmp->{$part};
-                }
-
-                if (property_exists($tmp, $part)) {
-                    if (is_array($tmp)) {
-                        $tmp = $tmp[$part];
-                    } else {
-                        $tmp = $tmp->{$part};
-                    }
-                } else {
-                    $hasMatch = false;
-                    break;
-                }
-            }
-
-            // Of there is a match
-            if ($hasMatch) {
-                if ($tmp instanceof Schema) {
-                    // Register it in directly
-                    $this->references->{$ref} = $tmp;
-                } else {
-                    // Register it in references
-                    new Schema($tmp, $this->version, $ref, $this->references);
-                }
-
-                return $this->references->{$ref};
-            }
-
-            unset($tmp);
-        }
-
-        // Check is URL
-        if (Check::uri($ref)) {
-            // Download external JSON
-            $ch = curl_init($ref);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_NOSIGNAL, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT_MS, self::CURL_TIMEOUT);
-            $data = curl_exec($ch);
-            $curlErrno = curl_errno($ch);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-
-            if ($curlErrno > 0) {
-                throw new SchemaException(sprintf(
-                    'External reference download problem: "%s" (%s)',
-                    $curlError,
-                    $this->getPath('/$ref')
-                ));
-            } else {
-                $json = json_decode($data);
-
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new SchemaException(sprintf(
-                        'Invalid json response for $ref "%s" (%s)',
-                        $ref,
-                        $this->getPath('/$ref')
-                    ));
-                }
-            }
-
-            new Schema($json, $this->version, $ref, $this->references);
-            return $this->references->{$ref};
-        }
-
-        throw new SchemaException(sprintf(
-            'Unknown reference "%s" (%s)',
-            $this->schema->{'$ref'},
-            $this->getPath('/$ref')
-        ));
+        // Create (sub-)schema object
+        $schema = new Schema($schema, $this->version, $this->_ref, $newPath);
     }
 
     /**
