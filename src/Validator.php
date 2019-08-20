@@ -329,7 +329,7 @@ class Validator
             $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
         }
 
-        // Apply defaults 
+        // Apply defaults
         if ($applyDefaults && $applySchema) {
             $this->applyDefaults($data, $applySchema);
         }
@@ -433,7 +433,7 @@ class Validator
             ));
         }
 
-        // Apply defaults 
+        // Apply defaults
         foreach ($schema->getSchema()->allOf as $subSchema) {
             $this->applyDefaults($data, $subSchema);
         }
@@ -471,7 +471,7 @@ class Validator
                     $this->mode = $this->mode ^ self::MODE_APPLY_DEFAULTS;
                 }
 
-                // Apply defaults 
+                // Apply defaults
                 $this->applyDefaults($data, $subSchema);
 
                 return;
@@ -990,7 +990,7 @@ class Validator
 
                 // If additional properties are not allowed the will fail if there is an extra properties
                 throw new ValidationException(sprintf(
-                    'Object property with key "%d" is not declared in properties map (%s)',
+                    'Object property with key "%s" is not declared in properties map (%s)',
                     $key,
                     $schema->getPath('properties')
                 ));

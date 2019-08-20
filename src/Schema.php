@@ -47,7 +47,7 @@ class Schema
      * @param object $references
      * @throws SchemaException
      */
-    public function __construct($schema, string $version = self::DEFAULT_VERSION, string $path = '#/', object $references = null)
+    public function __construct($schema, string $version = self::DEFAULT_VERSION, string $path = '#', object $references = null)
     {
         // Set path
         $this->path = $path;
@@ -162,7 +162,7 @@ class Schema
     {
         if (!$skipExtendCheck) {
             if (is_object($this->schema) && property_exists($this->schema, '$ref') && is_string($this->schema->{'$ref'})) {
-                return $this->extend($this->schema->{'$ref'});
+                return $this->extend($this->schema->{'$ref'})->getSchema();
             }
         }
 
@@ -237,12 +237,12 @@ class Schema
 
         // Try quick extend by path
         if (property_exists($this->references, $ref)) {
-            return $this->references->{$ref}->getSchema();
+            return $this->references->{$ref};
         }
 
         // Try to find by id (with "$" prefix)
         if (property_exists($this->references, '$' . $ref)) {
-            return $this->references->{'$' . $ref}->getSchema();
+            return $this->references->{'$' . $ref};
         }
 
         // Try to find by path
@@ -261,7 +261,7 @@ class Schema
                 $part = str_replace(['~0', '~1', '%25', '%22'], ['~', '/', '%', '"'], $part);
 
                 if ($tmp instanceof Schema) {
-                    $tmp = $tmp->{$part}->getSchema();
+                    $tmp = $tmp->{$part};
                 }
 
                 if (property_exists($tmp, $part)) {
@@ -286,7 +286,7 @@ class Schema
                     new Schema($tmp, $this->version, $ref, $this->references);
                 }
 
-                return $this->references->{$ref}->getSchema();
+                return $this->references->{$ref};
             }
 
             unset($tmp);
@@ -323,7 +323,7 @@ class Schema
             }
 
             new Schema($json, $this->version, $ref, $this->references);
-            return $this->references->{$ref}->getSchema();
+            return $this->references->{$ref};
         }
 
         throw new SchemaException(sprintf(
