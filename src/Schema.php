@@ -23,12 +23,6 @@ class Schema
     protected $version;
 
     /**
-     * Reference registry
-     * @var Ref
-     */
-    protected $_ref;
-
-    /**
      * Current instance path
      * @var string
      */
@@ -38,20 +32,16 @@ class Schema
      * Schema constructor.
      * @param object|bool $schema
      * @param string $version
-     * @param Ref $ref
      * @param string|null $path
      * @throws SchemaException
      */
-    public function __construct($schema, string $version = self::DEFAULT_VERSION, Ref $ref = null, string $path = '#')
+    public function __construct($schema, string $version = self::DEFAULT_VERSION, string $path = '#')
     {
         // Set path
         $this->path = $path;
 
         // Set version
         $this->version = $version;
-
-        // Set reference registry
-        $this->_ref = $ref;
 
         // Get schema type
         $schemaType = gettype($schema);
@@ -195,12 +185,12 @@ class Schema
 
         // Temporary solution till the class is not refactored to work with the new recursive references
         if (count(explode('/', $newPath)) > 100) {
-            $schema = new Schema(true, $this->version, $this->_ref, $newPath);
+            $schema = new Schema(true, $this->version, $newPath);
             return;
         }
 
         // Create (sub-)schema object
-        $schema = new Schema($schema, $this->version, $this->_ref, $newPath);
+        $schema = new Schema($schema, $this->version, $newPath);
     }
 
     /**

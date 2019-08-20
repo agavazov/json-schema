@@ -70,7 +70,7 @@ class Tests
         // Run tests
         foreach ($this->collections as $collection) {
             foreach ($collection->content as $content) {
-                // $this->testSchema($collection, $content); // @todo uncomment
+                $this->testSchema($collection, $content);
 
                 if (!empty($content->tests)) {
                     foreach ($content->tests as $test) {
@@ -92,7 +92,9 @@ class Tests
         $valid = property_exists($content, 'tests') ? true : $content->valid;
 
         try {
-            new Ref($content->schema);
+            if (is_object($content->schema)) {
+                new Ref($content->schema);
+            }
 
             $schema = new Schema($content->schema, $collection->version);
             $validator = new Validator();
@@ -135,9 +137,9 @@ class Tests
         $exception = null;
 
         try {
-            $ref = new Ref($content->schema);
+            new Ref($content->schema);
 
-            $schema = new Schema($content->schema, $collection->version, $ref);
+            $schema = new Schema($content->schema, $collection->version);
 
             // Make sure that the serialize and unserialize will work
             $schema = unserialize(serialize($schema));

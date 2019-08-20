@@ -177,7 +177,6 @@ class Validator
      * Validate type & cast the data
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateType(&$data, Schema $schema): void
@@ -339,7 +338,6 @@ class Validator
      * Validate const
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateConst(&$data, Schema $schema): void
@@ -362,7 +360,6 @@ class Validator
      * Validate enum
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateEnum(&$data, Schema $schema): void
@@ -578,7 +575,6 @@ class Validator
      * Validate minLength
      * @param string $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMinLength(string &$data, Schema $schema): void
@@ -603,7 +599,6 @@ class Validator
      * Validate maxLength
      * @param string $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMaxLength(string &$data, Schema $schema): void
@@ -628,7 +623,6 @@ class Validator
      * Validate pattern
      * @param string $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validatePattern(string &$data, Schema $schema): void
@@ -652,7 +646,6 @@ class Validator
      * Validate content encoding
      * @param string $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateContentEncoding(string &$data, Schema $schema): void
@@ -687,7 +680,6 @@ class Validator
      * Validate content type
      * @param string $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateContentMediaType(string &$data, Schema $schema): void
@@ -724,7 +716,6 @@ class Validator
      * Validate multiple of
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMultipleOf(&$data, Schema $schema): void
@@ -770,7 +761,6 @@ class Validator
      * Validate minimum
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMinimum(&$data, Schema $schema): void
@@ -795,7 +785,6 @@ class Validator
      * Validate maximum
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMaximum(&$data, Schema $schema): void
@@ -820,7 +809,6 @@ class Validator
      * Validate exclusive minimum
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateExclusiveMinimum(&$data, Schema $schema): void
@@ -868,7 +856,6 @@ class Validator
      * Validate exclusive maximum
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateExclusiveMaximum(&$data, Schema $schema): void
@@ -1047,7 +1034,6 @@ class Validator
      * Validate required
      * @param object $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateRequired(object &$data, Schema $schema): void
@@ -1092,7 +1078,6 @@ class Validator
      * Validate minProperties
      * @param object $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMinProperties(object &$data, Schema $schema): void
@@ -1117,7 +1102,6 @@ class Validator
      * Validate maxProperties
      * @param object $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMaxProperties(object &$data, Schema $schema): void
@@ -1202,7 +1186,6 @@ class Validator
      * Remove additional properties
      * @param object $data
      * @param Schema $schema
-     * @throws SchemaException
      */
     protected function removeAdditionalProperties(object &$data, Schema $schema): void
     {
@@ -1347,7 +1330,6 @@ class Validator
      * Validate minItems
      * @param array $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMinItems(array &$data, Schema $schema): void
@@ -1372,7 +1354,6 @@ class Validator
      * Validate maxItems
      * @param array $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateMaxItems(array &$data, Schema $schema): void
@@ -1397,7 +1378,6 @@ class Validator
      * Validate uniqueItems
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      * @throws ValidationException
      */
     protected function validateUniqueItems(array &$data, Schema $schema): void
@@ -1433,7 +1413,6 @@ class Validator
      * Remove additional items
      * @param array $data
      * @param Schema $schema
-     * @throws SchemaException
      */
     protected function removeAdditionalItems(array &$data, Schema $schema): void
     {
@@ -1461,7 +1440,6 @@ class Validator
      * Apply default values from the schema
      * @param $data
      * @param Schema $schema
-     * @throws SchemaException
      */
     protected function applyDefaults(&$data, Schema $schema): void
     {
